@@ -1,0 +1,120 @@
+@use "sass:map";
+@import "style/pages/theme";
+@import "style/pages/_all";
+
+.footer {
+width: 100%;
+background: #d0d2d3;
+padding-top: 70px;
+padding-bottom: 0;
+
+    .footer_about {
+        margin-bottom: 30px;
+
+        .footer_about_logo {
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+         ul li {
+            font-size: 16px;
+            color: map.get($theme-colors, "normal-text");
+            line-height: 36px;
+            list-style: none;
+        }
+    }
+
+    .footer_widget{
+        margin-bottom: 30px;
+        overflow: hidden;
+
+        h1{
+            color: map.get($theme-colors, "normal-text");
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        ul{
+            float: left;
+            width: 50%;
+            li {
+                font-size: 16px;
+                color: map.get($theme-colors, "normal-text");
+                line-height: 36px;
+                list-style: none;
+            }
+        }
+    
+        p {
+            font-size: 14px;
+            color: map.get($theme-colors, "normal-text");
+            margin-bottom: 30px;
+        }
+
+        .select_bar_phone{
+            display: flex;
+            align-items: center;
+        
+            &_icon {
+                font-size: 25px;
+                color: map.get($theme-colors, "main");
+
+                :hover {
+                    background: map.get($theme-colors, "main");
+                    color: #ffffff;
+                    border-color: #ffffff;
+                }
+
+                svg{
+                    font-size: 20px;
+                    padding: 10px;
+                    color: #404040;
+                    border: 1px solid #ededed;
+                    border-radius: 50%;
+                    transition: all, 0.3s;
+                    background: #ffffff;
+                }
+            }
+        
+            &_text {
+                margin-left: 10px;
+        
+                p {
+                    margin: 0;
+                    color: map.get($theme-colors, "bold-text");
+                    font-weight: bold;
+                }
+        
+                span {
+                    font-size: 14px;
+                    color: map.get($theme-colors, "normal-text");
+                }
+            }
+        }
+
+        .footer_widget_social{
+            display: flex;
+            align-items: center;
+            column-gap: 10px;
+            margin-top: 10px;
+
+            div {
+                :hover {
+                    background: map.get($theme-colors, "main");
+                    color: #ffffff;
+                    border-color: #ffffff;
+                }
+
+                svg{
+                    font-size: 20px;
+                    padding: 10px;
+                    color: #404040;
+                    border: 1px solid #ededed;
+                    border-radius: 50%;
+                    transition: all, 0.3s;
+                    background: #ffffff;
+                }
+            }
+        }
+}
+}

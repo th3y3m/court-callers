@@ -1,0 +1,85 @@
+.notifications-container {
+    width: 320px;
+    height: auto;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .flex {
+    display: flex;
+  }
+  
+  .flex-shrink-0 {
+    flex-shrink: 0;
+  }
+  
+  .success {
+    padding: 1rem;
+    border-radius: 0.375rem;
+    background-color: #FDEDEC;
+  }
+  
+  .succes-svg {
+    color: red;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  
+  .success-prompt-wrap {
+    margin-left: 0.75rem;
+  }
+  
+  .success-prompt-heading {
+    font-weight: bold;
+    color: #A93226;
+    margin: 0;
+  }
+  
+  .success-prompt-prompt {
+    margin-top: 0.5rem;
+    color: #C0392B;
+  }
+  
+  .success-button-container {
+    display: flex;
+    margin-top: 0.875rem;
+    margin-bottom: -0.375rem;
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+  }
+  
+  .success-button-main {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    background-color: #FDEDEC;
+    color: #A93226;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: bold;
+    border-radius: 0.375rem;
+    border: none
+  }
+  
+  .success-button-main:hover {
+    background-color: #F5B7B1;
+  }
+  
+  .success-button-secondary {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    margin-left: 0.75rem;
+    background-color: #FDEDEC;
+    color: #A93226;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    border-radius: 0.375rem;
+    border: none;
+  }
+  

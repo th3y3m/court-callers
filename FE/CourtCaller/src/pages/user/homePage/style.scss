@@ -1,0 +1,356 @@
+@use "sass:map";
+@import "style/pages/_all.scss";
+$bannerImg: "/assets/users/images/hero/banner.jpg";
+
+
+/* In your News.css or a separate CSS file */
+.slideshow-container {
+    padding-top: 10px;
+    padding-bottom: 30px;
+    width: 100%; /* Adjust based on your layout needs */
+    height: 500px; /* Adjust the height as needed */
+    overflow: hidden; /* Prevents overflow if images are too large */
+  }
+  
+  .sort_btn {
+    margin-left: 200px;
+  }
+
+
+.hero_banner_container {
+    .hero_banner {
+        background-image: url($bannerImg);
+        background-image: no-repeat;
+        background-size: cover;
+        height: 600px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        
+        .hero_text {
+            padding-left: 75px;
+
+            span {
+                font-size: 14px;
+                text-transform: uppercase;
+                font-weight: 700;
+                letter-spacing: 4px;
+                color: map.get($theme-colors, "main");
+            }
+
+            h2 {
+                font-size: 45px;
+                text-transform: uppercase;
+                font-weight: 700;
+                letter-spacing: 4px;
+                line-height: 52px;
+                color: map.get($theme-colors, "bold-text");
+                margin: 10px 0;
+            }
+
+        }
+    }
+}
+
+.searching_bar{
+    display: flex;
+    align-items: center;
+}
+
+.select_bar {
+    display: flex;
+    align-items: center; 
+    justify-content: space-between;
+    margin-bottom: 30px !important; 
+
+    select {
+        padding: 15px;
+        margin: 0 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        width: 130px;
+        background-color: #fff;
+        color: #333;
+        appearance: none;
+
+        &:focus {
+            border-color: map.get($theme-colors, "main");
+            outline: none;
+        }
+    }
+
+    button {
+        height: 44px;
+        padding: 15px 20px;
+        border: none;
+        background-color: map.get($theme-colors, "main");
+        color: #fff;
+        border-radius: 5px;
+        cursor: pointer;
+
+        &:hover {
+            background-color: darken(map.get($theme-colors, "main"), 10%);
+        }
+    }
+
+    .select_bar_phone {
+        display: flex;
+        align-items: center;
+        margin-left: auto;
+
+        .select_bar_phone_icon {
+            float: left;
+            font-size: 25px;
+            padding: 10px;
+            background: #f5f5f5;
+            line-height: 50px;
+            text-align: center;
+            border-radius: 50%;
+            margin-right: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: map.get($theme-colors, "main");
+        }
+
+        .select_bar_phone_text {
+            display: inline-block;
+
+            p {
+                color: map.get($theme-colors, "normal-text");
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+
+            span {
+                font-size: 14px;
+                color: #6f6f6f;
+            }
+        }
+    }
+}
+
+.search_bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    input {
+        padding: 15px;
+        margin-right: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        width: 100%;
+        max-width: 500px;
+        background-color: #fff;
+        color: #333;
+
+        &:focus {
+            border-color: map.get($theme-colors, "main");
+            outline: none;
+        }
+    }
+
+    button {
+        padding: 15px;
+        border: none;
+        background-color: map.get($theme-colors, "main");
+        color: #fff;
+        border-radius: 5px;
+        cursor: pointer;
+
+        svg {
+            font-size: 20px;
+        }
+
+        &:hover {
+            background-color: darken(map.get($theme-colors, "main"), 10%);
+        }
+    }
+}
+
+.booking_branch {
+    h1{
+        display: flex;
+        justify-content: center;
+        margin-bottom: 30px;
+    }
+}
+
+.booking_branch_container {
+    justify-content: space-between;
+    row-gap: 40px;
+
+    .booking_branch_detail {
+        background-color: #fff;
+        flex: 1 1 calc(25% - 20px); /* Adjust width to 25% minus gap */
+        max-width: calc(25% - 20px); /* Ensure max-width matches */
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        text-align: center;
+        transition: transform 0.3s, box-shadow 0.3s;
+
+        img {
+            margin-bottom: 10px;
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        h3 {
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        p {
+            margin-bottom: 15px;
+            font-size: 1rem;
+            color: #555;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: map.get($theme-colors, "main");
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+
+            &:hover {
+                background-color: darken(map.get($theme-colors, "main"), 10%);
+            }
+        }
+
+        &:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .home-img{
+            height: 230px;
+            width: 273px;
+        }
+    }
+}
+
+.banner {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.cat_info {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+
+    .cat_info_pic {
+        flex: 1 1 calc(25% - 20px); /* Adjust width to 25% minus gap */
+        max-width: calc(25% - 20px); /* Ensure max-width matches */
+        text-align: center;
+        margin-bottom: 20px;
+
+        img {
+            width: 100%;
+            max-width: 120px;
+            margin-bottom: 10px;
+        }
+
+        h3 {
+            margin-top: 10px;
+            font-size: 1.25rem;
+        }
+
+        p {
+            margin-top: 10px;
+            font-size: 1rem;
+            color: #555;
+        }
+    }
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    gap: 10px;
+
+    button {
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #fff;
+        color: #333;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+
+        &.active {
+            background-color: map.get($theme-colors, "main");
+            color: #fff;
+            border-color: map.get($theme-colors, "main");
+        }
+
+        &:hover:not(.active) {
+            background-color: map.get($theme-colors, "main");
+            color: #fff;
+        }
+
+        &:disabled {
+            cursor: not-allowed;
+            background-color: #f5f5f5;
+            color: #999;
+            border-color: #ddd;
+        }
+    }
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75); // Semi-transparent background
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; // Ensure it appears above other content
+}
+
+.modal {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    width: 80%;
+    max-width: 550px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1001; // Ensure it appears above overlay
+
+    h2 {
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+        text-align: center;
+    }
+
+    button {
+        display: block;
+        width: 30%;
+        padding: 10px 0;
+        margin-bottom: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: map.get($theme-colors, "main");
+        color: #fff;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.3s;
+
+        &:hover {
+            background-color: darken(map.get($theme-colors, "main"), 10%);
+        }
+    }
+}

@@ -1,0 +1,33 @@
+.pagination {
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  list-style: none;
+}
+
+.pagination li {
+  margin: 0 5px;
+  cursor: pointer;
+  list-style: none; /* Thêm dòng này để loại bỏ dấu chấm bullet */
+}
+
+.pagination li a {
+  padding: 8px 16px;
+  text-decoration: none;
+  color: #007bff;
+}
+
+.pagination li.active a {
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+}
+
+.pagination li.disabled a {
+  color: #ccc;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

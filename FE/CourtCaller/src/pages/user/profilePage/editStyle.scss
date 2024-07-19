@@ -1,0 +1,198 @@
+.edit-form-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; // Ensure the modal appears above everything else
+
+  .edit-container {
+    width: 800px;
+    background-color: #fff;
+    padding: 0;
+    box-shadow: inset 2px 2px 2px 0px rgba(255, 255, 255, 0.5),
+      7px 7px 20px 0px rgba(0, 0, 0, 0.1), 4px 4px 5px 0px rgba(0, 0, 0, 0.1);
+
+    .edit-header {
+      background-color: #008874;
+      padding-top: 6px;
+      padding-left: 10px;
+      color: #fff;
+      height: 45px;
+      display: flex;
+      align-items: center; // Center text vertically
+    }
+    .form-box {
+      padding: 10px 35px;
+    }
+
+    .buttons-edit {
+      margin: 0 20px 10px 0;
+      display: flex;
+      justify-content: flex-end;
+
+      .btn-back {
+        width: 90px;
+      }
+      .btn-update {
+        margin-right: 15px;
+        width: 90px;
+        background-color: #008874;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+    }
+  }
+
+  .account {
+    margin: 20px 0;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: solid grey;
+    border-bottom-width: thin;
+  }
+
+  .form-edit {
+    display: grid;
+    .edit-left {
+      grid-column-start: 1;
+    }
+    .edit-right {
+      grid-column-start: 17;
+    }
+
+    .form-field {
+      margin-bottom: 20px;
+
+      .input-fname {
+        margin-left: 20px;
+      }
+      .input-uname {
+        margin-left: 12px;
+      }
+      .input-phone {
+        margin-left: 46px;
+      }
+      .input-email {
+        margin-left: 58px;
+      }
+      .input-address {
+        margin-left: 39px;
+      }
+      .input-date {
+        margin-left: 10px;
+      }
+
+      .input-fname,
+      .input-uname,
+      .input-phone,
+      .input-email,
+      .input-address,
+      .input-date {
+        width: 200px;
+        height: 12px;
+        padding: 10px;
+        border: 2px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        color: #333333;
+        outline: none;
+      }
+      .input-fname:focus,
+      .input-uname:focus,
+      .input-phone:focus,
+      .input-email:focus,
+      .input-address:focus,
+      .input-date:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      }
+
+      .error-input-profile {
+        box-shadow: 1px 1px 5px 0 red;
+        border: none;
+        width: 200px;
+        height: 12px;
+        padding: 10px;
+        margin-left: 10px;
+        border-radius: 5px;
+        font-size: 16px;
+        outline: none;
+      }
+    }
+  }
+}
+
+.file-btn {
+  width: 250px;
+  height: 150px;
+  font-size: 18px;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  color: #007bff;
+  background-color: #fff;
+  border: 1.5px dashed #007bff;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.file-btn:hover {
+  color: #0221be;
+  background-color: #fff;
+}
+.file-btn span {
+  width: 50px;
+  height: 50px;
+  font-size: 30px;
+  color: #007bff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 25px;
+  background-color: #b9f0f9;
+}
+.selected-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #b9f0f9;
+  border: 1px solid #6ce4f7;
+  border-radius: 20px;
+  margin-top: 20px;
+  width: 76%;
+}
+.selected-file p {
+  font-size: 13px;
+  font-weight: 300px;
+  margin-left: 15px;
+}
+.selected-file button {
+  width: 38px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #007bff;
+  background-color: transparent;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.selected-file span:hover {
+  width: 100%;
+  color: #fff;
+  background-color: #007bff;
+}

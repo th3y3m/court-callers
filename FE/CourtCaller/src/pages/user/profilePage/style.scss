@@ -1,0 +1,123 @@
+.user-info{
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.info-box, .contact-box, .user-image-container{
+  align-items: center;
+  width: 450px;
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: inset 2px 2px 2px 0px rgba(255,255,255,.5),
+                    7px 7px 20px 0px rgba(0,0,0,.1),
+                    4px 4px 5px 0px rgba(0,0,0,.1);
+}
+
+.info-box {
+  margin: 0 20px 20px 20px;
+
+  h2{
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    position: relative;
+    padding-left: 15px;
+  } 
+  h2::before{
+    width: 4px;
+    background: #008874;
+    content: '';
+    height: 20px;
+    display: inline-block;
+    position: absolute;
+    top: 3px;
+    left: 0;
+  }
+}
+.contact-box{
+  margin: 0 20px 0 20px;
+
+  h2{
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    position: relative;
+    padding-left: 15px;
+  } 
+  h2::before{
+    width: 4px;
+    background: #008874;
+    content: '';
+    height: 20px;
+    display: inline-block;
+    position: absolute;
+    top: 3px;
+    left: 0;
+  }
+}
+
+
+.form-group{
+  display: flex;
+  justify-content: space-between;
+  border-bottom: solid #b2b2b2;
+  border-bottom-width: thin;
+
+  .info-field{
+    font-weight: 600;
+    padding: 20px 0 6px 0;
+  }
+  .info{
+    padding: 20px 0 6px 0;
+  }
+}
+
+.image-placeholder{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 50px;
+
+  .profile-img{
+    width: 250px;
+    height: 250px;
+    border: solid #2EF516;
+    border-radius: 50%;
+  }
+}
+
+.user-image p{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  font-size: large;
+}
+
+.btn-container{
+  display: grid;
+  margin: 20px 0;
+}
+
+.buttons{
+  grid-column-start: 5;
+}
+
+.btn-back, .btn-edit{
+  width: 110px;
+  background-color: #008874;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.btn-back{
+  margin-right: 20px;
+}
+
