@@ -1,4 +1,4 @@
-name: Court Callers Project (CI/CD applied)
+name: Court Callers Project (CI applied)
 
 on:
   push:
