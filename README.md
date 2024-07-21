@@ -58,8 +58,15 @@ Court Callers is a web application designed to simplify the process of booking b
 - **Map Integration:** Leaflet
 
 ## 📸 Screenshots
-![APIPage](https://github.com/halinhtvn3a/SWP391_Project/blob/main/screenshots/Swagger.jpeg)
+*Deploy link: [Court Caller](https://court-caller-deploy.vercel.app/)*
+![HomePage](https://github.com/th3y3m/court-callers/blob/main/screenshots/Home.jpeg)
+
 *Swagger link: [Court Caller API Documentation](https://courtcaller.azurewebsites.net/swagger/index.html)*
+![APIPage](https://github.com/th3y3m/court-callers/blob/main/screenshots/Swagger.jpeg)
+
+![LoginPage](https://github.com/th3y3m/court-callers/blob/main/screenshots/Login.jpeg)
+
+![BranchPage](https://github.com/th3y3m/court-callers/blob/main/screenshots/Booking.jpeg)
 
 ## 📬 Contact Us
 Feel free to reach out via [courtcallers@gmail.com](mailto:courtcallers@gmail.com) for any inquiries or support.
@@ -74,5 +81,7 @@ Feel free to reach out via [courtcallers@gmail.com](mailto:courtcallers@gmail.co
 
 - [halinhtvn3a](https://github.com/halinhtvn3a) - Project Lead
 - [th3y3m](https://github.com/th3y3m) - Backend development and database management
+- [LeThanhNhan91](https://github.com/LeThanhNhan91) - Frontend development
+- [ttd11204](https://github.com/ttd11204) - Frontend development
 
 Special thanks to [Freepik](https://www.freepik.com) for providing the icons used in this project.
