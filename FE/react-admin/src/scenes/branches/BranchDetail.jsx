@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Typography, TextField, Card, CardContent, CardMedia, Grid, Modal, IconButton, Divider } from '@mui/material';
+import { Box, Button, Typography, TextField, Card, CardContent, CardMedia, Grid, Modal, IconButton, Divider ,Select , FormControl , InputLabel , MenuItem} from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import { tokens } from '../../theme';
@@ -12,6 +12,15 @@ import { v4 } from 'uuid';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
+const daysOfWeek = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday'
+];
 const BranchDetail = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -31,6 +40,10 @@ const BranchDetail = () => {
   const [flexPrice, setFlexPrice] = useState(0);
   const [weekdayPrice, setWeekdayPrice] = useState(0);
   const [weekendPrice, setWeekendPrice] = useState(0);
+
+  //drop down 
+  const [startDay, setStartDay] = useState('');
+  const [endDay, setEndDay] = useState('');
 
   useEffect(() => {
     const getBranchData = async () => {
@@ -87,59 +100,68 @@ const BranchDetail = () => {
     const newPreviews = validPictureTypes.map(file => URL.createObjectURL(file));
     setImage(prevImages => [...prevImages, ...validPictureTypes]);
     setImageRef(prevImageRefs => [...prevImageRefs, ...validPictureTypes.map(() => ref(storageDb, `BranchImage/${v4()}`))]);
-    setPreviewImage(prevPreviews => [...prevPreviews, ...newPreviews]);
+    setPreviewImage([...newPreviews]);
   };
 
   const handleSave = async () => {
     try {
-      const branchPictures = image || [];
-      let imageUrls = Array.isArray(branch.branchPicture) ? branch.branchPicture : JSON.parse(branch.branchPicture || '[]');
-
-      if (branchPictures.length > 0) {
-        const uploadImageTasks = branchPictures.map(async (image) => {
+      let imageUrls = [];
+      try {
+        imageUrls = Array.isArray(branch.branchPicture) ? branch.branchPicture : JSON.parse(branch.branchPicture || '[]');
+      } catch (e) {
+        imageUrls = [];
+      }
+  
+      if (image.length > 0) {
+        const uploadImageTasks = image.map(async (file, index) => {
           const imageRef = ref(storageDb, `BranchImage/${v4()}`);
-          await uploadBytes(imageRef, image);
+          await uploadBytes(imageRef, file);
           const url = await getDownloadURL(imageRef);
           return url;
         });
-
+  
         const newImageUrls = await Promise.all(uploadImageTasks);
-        imageUrls = [...imageUrls, ...newImageUrls];
+  
+        // Kết hợp URL mới với URL cũ, loại bỏ các URL trùng lặp.
+        imageUrls = [...new Set([...imageUrls, ...newImageUrls])];
       }
-
+  
       const branchData = {
         ...branch,
         branchPicture: JSON.stringify(imageUrls),
       };
-
+  
       const formData = new FormData();
       Object.keys(branchData).forEach(key => {
         formData.append(key, branchData[key]);
       });
-
+  
       imageUrls.forEach((url, index) => {
         formData.append(`ExistingImages[${index}]`, url);
       });
-
-      if (branchPictures.length > 0) {
-        branchPictures.forEach(file => {
+  
+      if (image.length > 0) {
+        image.forEach(file => {
           formData.append('BranchPictures', file, file.name);
         });
       }
-
+  
       await updateBranch(branchId, formData);
-
+  
       setBranch((prevBranch) => ({
         ...prevBranch,
         branchPicture: imageUrls,
       }));
       previewImage.forEach(url => URL.revokeObjectURL(url));
       setPreviewImage([]);
+      setImage([]);
       setEditMode(false);
     } catch (err) {
       setError(`Failed to update branch details: ${err.message}`);
     }
   };
+  
+
 
   const handleEditToggle = () => {
     setEditMode((prevState) => !prevState);
@@ -294,6 +316,21 @@ const BranchDetail = () => {
     return acc;
   }, {});
 
+  const handleStartDayChange = (e) => {
+    const value = e.target.value;
+    setStartDay(value);
+    setEndDay(''); // Reset end day when start day changes
+    handleFieldChange('openDay', `${value} to`);
+  };
+
+  const handleEndDayChange = (e) => {
+    const value = e.target.value;
+    setEndDay(value);
+    handleFieldChange('openDay', `${startDay} to ${value}`);
+  };
+
+  const filteredEndDays = daysOfWeek.slice(daysOfWeek.indexOf(startDay) + 1);
+
   return (
     <Box m="20px">
       <Header title="Branch Detail" subtitle="Details of the branch" />
@@ -366,8 +403,8 @@ const BranchDetail = () => {
                 sx={{ 
                   borderRadius: '8px', 
                   objectFit: 'cover', 
-                  width: '600px', 
-                  height: '500px', 
+                  width: '430px', 
+                  height: '300px', 
                   
                 }}
                 onClick={() => handleOpenModal(currentImageIndex)}
@@ -452,14 +489,37 @@ const BranchDetail = () => {
                     size="small"
                     sx={{ mb: 2 }}
                   />
-                  <TextField
-                    fullWidth
-                    label="Open Day"
-                    value={branch.openDay}
-                    onChange={(e) => handleFieldChange('openDay', e.target.value)}
-                    size="small"
-                    sx={{ mb: 2 }}
-                  />
+                   <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+      <FormControl fullWidth size="small">
+        <InputLabel>Start Day</InputLabel>
+        <Select
+          value={startDay}
+          label="Start Day"
+          onChange={handleStartDayChange}
+        >
+          {daysOfWeek.map((day) => (
+            <MenuItem key={day} value={day}>
+              {day}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      <FormControl fullWidth size="small" disabled={!startDay}>
+        <InputLabel>End Day</InputLabel>
+        <Select
+          value={endDay}
+          label="End Day"
+          onChange={handleEndDayChange}
+        >
+          {filteredEndDays.map((day) => (
+            <MenuItem key={day} value={day}>
+              {day}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    </Box>
                   <TextField
                     fullWidth
                     label="Status"

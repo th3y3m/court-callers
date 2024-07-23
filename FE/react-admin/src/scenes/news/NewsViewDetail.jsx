@@ -241,15 +241,15 @@ const NewsViewDetail = () => {
                   {editMode ? (
                     <Select
                       fullWidth
-                      value={news.isHomepageSlideshow || true}
+                      value={news.isHomepageSlideshow}
                       onChange={(e) => handleFieldChange('isHomepageSlideshow', e.target.value)}
                       size="small"
                     >
-                      <MenuItem value={true}>True</MenuItem>
-                      <MenuItem value={false}>False</MenuItem>
+                      <MenuItem value="True">Yes</MenuItem>
+                      <MenuItem value="False">No</MenuItem>
                     </Select>
                   ) : (
-                    <Typography>{news.isHomepageSlideshow ? 'Yes' : 'No'}</Typography>
+                    <Typography>{news.isHomepageSlideshow === 'True' ? 'Yes' : 'No'}</Typography>
                   )}
                 </Box>
                 {editMode && (

@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Button, TextField, FormControl, FormControlLabel, Checkbox, Grid, Paper, ThemeProvider, createTheme } from "@mui/material";
+import { Box, Typography, Button, TextField, FormControl, FormControlLabel, Checkbox, Grid, Paper, ThemeProvider, createTheme ,MenuItem  } from "@mui/material";
 import CalendarView from './CalendarView';
 import { fetchPriceByBranchIDType } from '../../../api/priceApi';
-import { fetchUserDetailByEmail, fetchUserDetail } from "../../../api/userApi"; // Import thêm các hàm API để kiểm tra email
+import { fetchUserDetailByEmail, fetchUserDetail, fetchUserDetailByEmailVer2 } from "../../../api/userApi"; // Import thêm các hàm API để kiểm tra email
+import { fixDayOfWeekValidation, fixEndTimeValidation, fixMonthValidation, fixStartTimeValidation } from '../../../scenes/formValidation';
+import '../../../scenes/validate.css';
 
 const theme = createTheme({
   palette: {
@@ -27,15 +29,12 @@ const theme = createTheme({
   },
 });
 
-const calculateDaysInMonth = (year, month) => {
-  return new Date(year, month, 0).getDate();
-};
-
-const getOccurrencesOfDayInMonth = (year, month, day) => {
+const getOccurrencesOfDayInPeriod = (startDate, totalDays, day) => {
   let count = 0;
-  const totalDays = calculateDaysInMonth(year, month);
-  for (let date = 1; date <= totalDays; date++) {
-    const dayOfWeek = new Date(year, month - 1, date).toLocaleDateString('en-US', { weekday: 'long' });
+  for (let i = 0; i < totalDays; i++) {
+    const currentDay = new Date(startDate);
+    currentDay.setDate(startDate.getDate() + i);
+    const dayOfWeek = currentDay.toLocaleDateString('en-US', { weekday: 'long' });
     if (dayOfWeek === day) {
       count++;
     }
@@ -45,21 +44,16 @@ const getOccurrencesOfDayInMonth = (year, month, day) => {
 
 const getTotalDaysForWeekdays = (daysOfWeek, numberOfMonths, startDate) => {
   const totalDays = {};
-  const startMonth = startDate.getMonth() + 1;
-  const startYear = startDate.getFullYear();
+  const daysInPeriod = numberOfMonths * 30;  // Tính tổng số ngày
 
-  daysOfWeek.forEach(day => totalDays[day] = 0);
-
-  for (let i = 0; i < numberOfMonths; i++) {
-    const currentMonth = (startMonth + i - 1) % 12 + 1;
-    const currentYear = startYear + Math.floor((startMonth + i - 1) / 12);
-    daysOfWeek.forEach(day => {
-      totalDays[day] += getOccurrencesOfDayInMonth(currentYear, currentMonth, day);
-    });
-  }
+  //array.forEach(function(currentValue, index, arr), thisValue)
+  daysOfWeek.forEach(day => {
+    totalDays[day] = getOccurrencesOfDayInPeriod(startDate, daysInPeriod, day);
+  });
 
   return totalDays;
 };
+
 
 const FixedBooking = () => {
   const [numberOfMonths, setNumberOfMonths] = useState('');
@@ -74,6 +68,24 @@ const FixedBooking = () => {
   const [userExists, setUserExists] = useState(false);
   const [userInfo, setUserInfo] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
+  const [monthValidation, setMonthValidation] = useState({
+    isValid: true,
+    message: "",
+  });
+  const [startTimeValidation, setStartTimeValidation] = useState({
+    isValid: true,
+    message: "",
+  });
+  const [endTimeValidation, setEndTimeValidation] = useState({
+    isValid: true,
+    message: "",
+  });
+  const [dayOfWeekValidation, setDayOfWeekValidation] = useState({
+    isValid: true,
+    message: "",
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -100,14 +112,14 @@ const FixedBooking = () => {
 
   const handleCheck = async () => {
     if (!email) {
-      setErrorMessage('Vui lòng nhập email.');
+      setErrorMessage('Please enter an email address.');
       return;
     }
     try {
       const userData = await fetchUserDetailByEmail(email);
       if (userData && userData.length > 0) {
         const user = userData[0];
-        const detailedUserInfo = await fetchUserDetail(user.id);
+        const detailedUserInfo = await fetchUserDetailByEmailVer2(email);
         if (detailedUserInfo) {
           setUserExists(true);
           setUserId(user.id); // Cập nhật userId
@@ -124,25 +136,51 @@ const FixedBooking = () => {
         } else {
           setUserExists(false);
           setUserInfo(null);
-          setErrorMessage('Không tìm thấy chi tiết người dùng.');
+          setErrorMessage('User information not found. Please try again.');
         }
       } else {
         setUserExists(false);
         setUserInfo(null);
-        setErrorMessage('Người dùng không tồn tại. Vui lòng đăng ký.');
+        setErrorMessage('User not found. Please try again.');
       }
     } catch (error) {
-      console.error('Lỗi khi kiểm tra tồn tại của người dùng:', error);
-      setErrorMessage('Lỗi khi kiểm tra tồn tại của người dùng. Vui lòng thử lại.');
+      console.error('Error when checking user existence:', error);
+      setErrorMessage('Error checking user existence. Please try again.');
     }
   };
 
+  const result = getTotalDaysForWeekdays(daysOfWeek, numberOfMonths, startDate);
+console.log(result);
+
   const handleSubmit = (event) => {
     event.preventDefault();
+
+    const monthValidation = fixMonthValidation(numberOfMonths);
+    const startTimeValidation = fixStartTimeValidation(slotStartTime);
+    const endTimeValidation = fixEndTimeValidation(slotStartTime, slotEndTime);
+    const dayOfWeekValidation = fixDayOfWeekValidation(daysOfWeek);
+    setMonthValidation(monthValidation);
+    setStartTimeValidation(startTimeValidation);
+    setEndTimeValidation(endTimeValidation);
+    setDayOfWeekValidation(dayOfWeekValidation);
+
+    if (
+      !monthValidation.isValid ||
+      !startTimeValidation.isValid ||
+      !endTimeValidation.isValid ||
+      !dayOfWeekValidation.isValid
+    ) {
+      setMessage("Please try again");
+      setMessageType("error");
+      return;
+    }
+
     const formattedStartDate = startDate.toISOString().split('T')[0];
 
     const totalDays = getTotalDaysForWeekdays(daysOfWeek, numberOfMonths, startDate);
 
+    //array.reduce(callback(accumulator, currentValue, currentIndex, array), initialValue)
+    
     const totalPrice = daysOfWeek.reduce((total, day) => {
       return total + (totalDays[day] * fixedPrice);
     }, 0);
@@ -177,6 +215,22 @@ const FixedBooking = () => {
     });
   };
 
+  const handleStartTimeChange = (e) => {
+    const value = e.target.value;
+    const [hour] = value.split(':');
+    setSlotStartTime(value);
+  
+    const startHour = parseInt(hour, 10);
+    if (isNaN(startHour) || startHour < 0 || startHour > 23) {
+      setStartTimeValidation({ message: 'Please select a valid hour (0-23).' });
+      setSlotEndTime('');
+    } else {
+      setStartTimeValidation({ message: '' });
+      const endHour = (startHour + 1) % 24;
+      setSlotEndTime(`${endHour.toString().padStart(2, '0')}:00:00`);
+    }
+  };
+  const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4 }}>
@@ -233,6 +287,11 @@ const FixedBooking = () => {
                           InputLabelProps={{ style: { color: 'black' } }}
                           InputProps={{ style: { color: 'black' } }}
                         />
+                        {monthValidation.message && (
+                            <p className="errorVal">
+                              {monthValidation.message}
+                            </p>
+                          )}
                       </FormControl>
                     </Grid>
                     <Grid item xs={12}>
@@ -252,6 +311,11 @@ const FixedBooking = () => {
                           sx={{ color: 'black' }}
                         />
                       ))}
+                      {dayOfWeekValidation.message && (
+                          <p className="errorVal">
+                            {dayOfWeekValidation.message}
+                          </p>
+                        )}
                     </Grid>
                     <Grid item xs={12}>
                       <Typography sx={{ color: 'black' }}>Start Date:</Typography>
@@ -273,37 +337,51 @@ const FixedBooking = () => {
                           value={branchId}
                           onChange={(e) => setBranchId(e.target.value)}
                           required
-                          InputLabelProps={{ style: { color: 'black' } }}
-                          InputProps={{ style: { color: 'black' } }}
+                          disabled
                         />
                       </FormControl>
                     </Grid>
                     <Grid item xs={12}>
-                      <FormControl fullWidth>
-                        <TextField
-                          label="Slot Start Time"
-                          type="text"
-                          value={slotStartTime}
-                          onChange={(e) => setSlotStartTime(e.target.value)}
-                          required
-                          InputLabelProps={{ style: { color: 'black' } }}
-                          InputProps={{ style: { color: 'black' } }}
-                        />
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <FormControl fullWidth>
-                        <TextField
-                          label="Slot End Time"
-                          type="text"
-                          value={slotEndTime}
-                          onChange={(e) => setSlotEndTime(e.target.value)}
-                          required
-                          InputLabelProps={{ style: { color: 'black' } }}
-                          InputProps={{ style: { color: 'black' } }}
-                        />
-                      </FormControl>
-                    </Grid>
+        <FormControl fullWidth>
+          <TextField
+            select
+            label="Slot Start Time"
+            value={slotStartTime}
+            onChange={handleStartTimeChange}
+            required
+            InputLabelProps={{ style: { color: 'black' } }}
+            InputProps={{ style: { color: 'black' } }}
+          >
+            {hours.map((hour) => (
+              <MenuItem key={hour} value={`${hour}:00:00`}>
+                {hour}:00:00
+              </MenuItem>
+            ))}
+          </TextField>
+          {startTimeValidation.message && (
+            <p className="errorVal">
+              {startTimeValidation.message}
+            </p>
+          )}
+        </FormControl>
+      </Grid>
+      <Grid item xs={12}>
+        <FormControl fullWidth>
+          <TextField
+            label="Slot End Time"
+            type="text"
+            value={slotEndTime}
+            disabled
+            InputLabelProps={{ style: { color: 'black' } }}
+            InputProps={{ style: { color: 'black' } }}
+          />
+          {endTimeValidation.message && (
+            <p className="errorVal">
+              {endTimeValidation.message}
+            </p>
+          )}
+        </FormControl>
+      </Grid>
                     <Grid item xs={12}>
                       <Button variant="contained" color="primary" type="submit" fullWidth>Continue</Button>
                     </Grid>

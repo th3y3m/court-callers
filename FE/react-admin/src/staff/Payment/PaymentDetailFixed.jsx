@@ -6,6 +6,8 @@ import PaymentIcon from '@mui/icons-material/Payment';
 import { generatePaymentToken, processPayment } from '../../api/paymentApi';
 import { createFixedBooking } from '../../api/bookingApi';
 import LoadingPage from './LoadingPage';
+import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
+import * as signalR from '@microsoft/signalr';
 
 const theme = createTheme({
   components: {
@@ -40,8 +42,80 @@ const PaymentDetailFixed = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [connection, setConnection] = useState(null);
+  
 
   console.log('bookdata: ', branchId, bookingRequests, totalPrice, numberOfMonths, daysOfWeek, startDate, bookingRequests[0].slotDate, slotStartTime, slotEndTime);
+
+  useEffect(() => {
+    const newConnection = new HubConnectionBuilder()
+      .withUrl("https://courtcaller.azurewebsites.net/timeslothub", {
+        transport: signalR.HttpTransportType.WebSockets
+      })
+      .withAutomaticReconnect()
+      .configureLogging(LogLevel.Information)
+      .build();
+
+    newConnection.onreconnecting((error) => {
+      console.log(`Connection lost due to error "${error}". Reconnecting.`);
+      setIsConnected(false);
+    });
+
+    newConnection.onreconnected((connectionId) => {
+      console.log(`Connection reestablished. Connected with connectionId "${connectionId}".`);
+      setIsConnected(true);
+    });
+
+    newConnection.onclose((error) => {
+      console.log(`Connection closed due to error "${error}". Try refreshing this page to restart the connection.`);
+      setIsConnected(false);
+    });
+    console.log('Initializing connection...');
+    setConnection(newConnection);
+  }, []);
+
+  useEffect(() => {
+    if (connection) {
+      const startConnection = async () => {
+        try {
+          await connection.start();
+          console.log('SignalR Connected.');
+          setIsConnected(true);
+        } catch (error) {
+          console.log('Error starting connection:', error);
+          setIsConnected(false);
+          setTimeout(startConnection, 5000);
+        }
+      };
+      startConnection();
+    }
+  }, [connection]);
+
+  const sendUnavailableSlotCheck = async () => {
+    if (connection) {
+      const lastRequest = bookingRequests[bookingRequests.length - 1];
+     
+      const slotCheckModel = {
+       branchId: branchId,
+        slotDate: lastRequest.slotDate,
+        timeSlot: {
+          slotDate: lastRequest.slotDate,
+          slotStartTime: lastRequest.timeSlot.slotStartTime,
+          slotEndTime: lastRequest.timeSlot.slotEndTime,
+        }
+      };
+      console.log('SlotCheckModel:', slotCheckModel);
+      try {
+        await connection.send('DisableSlot', slotCheckModel);
+        console.log('Data sent to server:', slotCheckModel);
+      } catch (e) {
+        console.log('Error sending data to server:', e);
+      }
+    } else {
+      alert('No connection to server yet.');
+    }
+  };
 
   const handleNext = async () => {
     if (activeStep === 0) {
@@ -63,10 +137,11 @@ const PaymentDetailFixed = () => {
         const bookingId = response.bookingId;
         console.log('Booking ID:', bookingId);
         const tokenResponse = await generatePaymentToken(bookingId);
+        await sendUnavailableSlotCheck();
         console.log('Token Response:', tokenResponse);
         const token = tokenResponse.token;
         console.log('Token:', token);
-        const paymentResponse = await processPayment(token);
+        const paymentResponse = await processPayment("Staff", token);
         console.log('Payment Response:', paymentResponse);
         const paymentUrl = paymentResponse;
         console.log('Payment URL:', paymentUrl);
@@ -112,8 +187,8 @@ const PaymentDetailFixed = () => {
                     <FormControl component="fieldset">
                       <FormLabel component="legend" sx={{ color: 'black' }}>Choose Payment Method</FormLabel>
                       <RadioGroup aria-label="payment method" name="paymentMethod">
-                        <FormControlLabel value="cash" control={<Radio />} label="Cash" sx={{ color: 'black' }} />
-                        <FormControlLabel value="creditCard" control={<Radio />} label="Credit Card" sx={{ color: 'black' }} />
+                        {/* <FormControlLabel value="cash" control={<Radio />} label="Cash" sx={{ color: 'black' }} /> */}
+                        <FormControlLabel value="creditCard" control={<Radio />} label="Credit Card" sx={{ color: 'black' }} checked />
                       </RadioGroup>
                     </FormControl>
                   </Box>

@@ -161,7 +161,8 @@ const ReserveSlot = () => {
 
     const newWeekStart = oneWeekBeforeStartOfWeek.format('YYYY-MM-DD');
     setNewWeekStart(newWeekStart);
-    const unavailableSlot = await fetchUnavailableSlots(newWeekStart, selectedBranch);
+    const newWeekStartPlus = oneWeekBeforeStartOfWeek.add(1, 'day').format('YYYY-MM-DD');
+    const unavailableSlot = await fetchUnavailableSlots(newWeekStartPlus, selectedBranch);
     const slots = Array.isArray(unavailableSlot) ? unavailableSlot : [];
     setUnavailableSlot(slots);
 
@@ -172,9 +173,10 @@ const ReserveSlot = () => {
   const handleNextWeek = async () => {
     setLoading(true);
     const newWeekStart = dayjs(startOfWeek).add(1, 'week').format('YYYY-MM-DD');
+    console.log ('newWeekStart:', newWeekStart);
     setNewWeekStart(newWeekStart);
     setStartOfWeek(dayjs(startOfWeek).add(1, 'week'));
-    console.log('startOfWeek là dcm:', startOfWeek.format('YYYY-MM-DD'));
+   
     const unavailableSlot = await fetchUnavailableSlots(newWeekStart, selectedBranch);
     const slots = Array.isArray(unavailableSlot) ? unavailableSlot : [];
     setUnavailableSlot(slots);
@@ -397,6 +399,11 @@ useEffect(() => {
   const handleContinue = async () => {
     if (!selectedBranch) {
       alert("Please select a branch first");
+      return;
+    }
+
+    if(selectedSlots == 0){
+      alert('You need to choose slot(s) first');
       return;
     }
 

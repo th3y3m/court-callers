@@ -1,9 +1,9 @@
-import { useTheme } from "@mui/material";
-import { ResponsiveBar } from "@nivo/bar";
-import { tokens } from "../theme";
-import { mockBarData as data } from "../data/mockData";
+import React from 'react';
+import { useTheme } from '@mui/material';
+import { ResponsiveBar } from '@nivo/bar';
+import { tokens } from '../theme';
 
-const BarChart = ({ isDashboard = false }) => {
+const BarChart = ({ data }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
@@ -11,7 +11,6 @@ const BarChart = ({ isDashboard = false }) => {
     <ResponsiveBar
       data={data}
       theme={{
-        // added
         axis: {
           domain: {
             line: {
@@ -39,36 +38,16 @@ const BarChart = ({ isDashboard = false }) => {
           },
         },
       }}
-      keys={["hot dog", "burger", "sandwich", "kebab", "fries", "donut"]}
-      indexBy="country"
+      keys={['value']}
+      indexBy="id"
       margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
       padding={0.3}
-      valueScale={{ type: "linear" }}
-      indexScale={{ type: "band", round: true }}
-      colors={{ scheme: "nivo" }}
-      defs={[
-        {
-          id: "dots",
-          type: "patternDots",
-          background: "inherit",
-          color: "#38bcb2",
-          size: 4,
-          padding: 1,
-          stagger: true,
-        },
-        {
-          id: "lines",
-          type: "patternLines",
-          background: "inherit",
-          color: "#eed312",
-          rotation: -45,
-          lineWidth: 6,
-          spacing: 10,
-        },
-      ]}
+      valueScale={{ type: 'linear' }}
+      indexScale={{ type: 'band', round: true }}
+      colors={{ scheme: 'nivo' }}
       borderColor={{
-        from: "color",
-        modifiers: [["darker", "1.6"]],
+        from: 'color',
+        modifiers: [['darker', '1.6']],
       }}
       axisTop={null}
       axisRight={null}
@@ -76,52 +55,62 @@ const BarChart = ({ isDashboard = false }) => {
         tickSize: 5,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard ? undefined : "country", // changed
-        legendPosition: "middle",
+        legend: '',
+        legendPosition: 'middle',
         legendOffset: 32,
       }}
       axisLeft={{
         tickSize: 5,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard ? undefined : "food", // changed
-        legendPosition: "middle",
+        legend: '',
+        legendPosition: 'middle',
         legendOffset: -40,
+        format: value => `${value}k`, // Format values to thousands (k)
       }}
       enableLabel={false}
       labelSkipWidth={12}
       labelSkipHeight={12}
       labelTextColor={{
-        from: "color",
-        modifiers: [["darker", 1.6]],
+        from: 'color',
+        modifiers: [['darker', 1.6]],
       }}
       legends={[
         {
-          dataFrom: "keys",
-          anchor: "bottom-right",
-          direction: "column",
+          dataFrom: 'keys',
+          anchor: 'bottom-right',
+          direction: 'column',
           justify: false,
           translateX: 120,
           translateY: 0,
           itemsSpacing: 2,
           itemWidth: 100,
           itemHeight: 20,
-          itemDirection: "left-to-right",
+          itemDirection: 'left-to-right',
           itemOpacity: 0.85,
           symbolSize: 20,
           effects: [
             {
-              on: "hover",
+              on: 'hover',
               style: {
                 itemOpacity: 1,
               },
             },
           ],
+          data: [
+            { label: 'revenue', color: '#e8c1a0'} // Update legend label here
+          ],
         },
       ]}
+      valueFormat={value => `${value}k`} // Format values to thousands (k)
+      tooltip={({ id, value, color }) => (
+        <strong style={{ color: 'red' }}>
+          revenue: {value}
+        </strong>
+      )}
       role="application"
       barAriaLabel={function (e) {
-        return e.id + ": " + e.formattedValue + " in country: " + e.indexValue;
+        return e.id + ': ' + e.formattedValue + ' in id: ' + e.indexValue;
       }}
     />
   );

@@ -5,11 +5,12 @@ import {
   Paper, TextField, Select, MenuItem, Modal 
 } from "@mui/material";
 import ReactPaginate from "react-paginate";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import SearchIcon from "@mui/icons-material/Search";
 import { fetchReviews, updateReview, deleteReview, fetchUserEmailById } from "../../api/reviewApi";
 import Header from "../../components/Header";
 import { tokens } from "../../theme";
+import { validateRating, validateRequired } from "../formValidation";
 
 const Reviews = () => {
   const theme = useTheme();
@@ -20,8 +21,8 @@ const Reviews = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [openEditModal, setOpenEditModal] = useState(false);
   const [currentReview, setCurrentReview] = useState({ reviewId: "", reviewText: "", rating: 5, id: "", branchId: "" });
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [errors, setErrors] = useState({});
 
   const page = parseInt(searchParams.get("pageNumber")) || 1;
   const pageSize = parseInt(searchParams.get("pageSize")) || 10;
@@ -72,17 +73,50 @@ const Reviews = () => {
       ...prev,
       [field]: value,
     }));
+
+    if (field === "reviewText") {
+      const validation = validateRequired(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        reviewText: validation.isValid ? "" : validation.message,
+      }));
+    }
+
+    if (field === "rating") {
+      const validation = validateRating(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        rating: validation.isValid ? "" : validation.message,
+      }));
+    }
   };
 
   const handleSave = async () => {
+    const validationErrors = {};
+  
+    const reviewTextValidation = validateRequired(currentReview.reviewText);
+    if (!reviewTextValidation.isValid) {
+      validationErrors.reviewText = reviewTextValidation.message;
+    }
+  
+    const ratingValidation = validateRating(currentReview.rating);
+    if (!ratingValidation.isValid) {
+      validationErrors.rating = ratingValidation.message;
+    }
+  
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+  
     try {
       const payload = {
         reviewText: currentReview.reviewText,
         rating: currentReview.rating,
-        id: currentReview.id,
+        userId: currentReview.id,
         branchId: currentReview.branchId,
       };
-
+  
       await updateReview(currentReview.reviewId, payload);
       setOpenEditModal(false);
       const reviewsData = await fetchReviews(page, pageSize, searchQuery);
@@ -170,6 +204,7 @@ const Reviews = () => {
                         <Button 
                           variant="contained" 
                           size="small" 
+                          color="secondary"
                           onClick={() => handleEditToggle(row)} 
                           style={{ marginRight: 8 }}
                         >
@@ -199,7 +234,7 @@ const Reviews = () => {
           {rowCount > 0 && (
             <Box display="flex" justifyContent="space-between" alignItems="center" mt="20px">
               <Select value={pageSize} onChange={handlePageSizeChange}>
-                {[10, 15, 20, 25, 50].map((size) => (
+                {[10, 15, 20].map((size) => (
                   <MenuItem key={size} value={size}>
                     {size}
                   </MenuItem>
@@ -242,6 +277,8 @@ const Reviews = () => {
             value={currentReview.reviewText} 
             onChange={(e) => handleFieldChange("reviewText", e.target.value)} 
             margin="normal" 
+            error={!!errors.reviewText}
+            helperText={errors.reviewText}
           />
           <TextField 
             fullWidth 
@@ -250,7 +287,9 @@ const Reviews = () => {
             type="number" 
             value={currentReview.rating} 
             onChange={(e) => handleFieldChange("rating", parseInt(e.target.value))} 
-            margin="normal" 
+            margin="normal"
+            error={!!errors.rating}
+            helperText={errors.rating}
           />
           <TextField 
             fullWidth 
@@ -259,6 +298,7 @@ const Reviews = () => {
             value={currentReview.branchId} 
             onChange={(e) => handleFieldChange("branchId", e.target.value )} 
             margin="normal" 
+            disabled
           />
           <TextField 
             fullWidth 

@@ -159,7 +159,7 @@ const News = () => {
         </Box>
         <Button
           variant="contained"
-          color="primary"
+          color="secondary"
           onClick={handleCreateOpen}
           style={{ marginLeft: 8 }}
         >
@@ -188,14 +188,14 @@ const News = () => {
                   <TableCell>
                     <Button
                       variant="contained"
-                      color="primary"
+                      color="secondary"
                       onClick={() => handleViewDetail(news)}
                     >
                       View Detail
                     </Button>
                     <Button
                       variant="contained"
-                      color="secondary"
+                      color="error"
                       onClick={() => handleDelete(news.newId)}
                       style={{ marginLeft: 8 }}
                     >
@@ -220,7 +220,7 @@ const News = () => {
           onChange={handlePageSizeChange}
           margin="dense"
         >
-          {[10, 15, 20, 25, 50].map(size => (
+          {[10, 15, 20].map(size => (
             <MenuItem key={size} value={size}>
               {size}
             </MenuItem>

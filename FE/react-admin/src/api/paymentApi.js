@@ -1,10 +1,10 @@
-import axios from 'axios';
 
+import api from './api';
 const url = 'https://courtcaller.azurewebsites.net/api';
 
 export const fetchPayments = async () => {
   try {
-    const response = await axios.get(`${url}/Payments`);
+    const response = await api.get(`${url}/Payments`);
     if (response.data && Array.isArray(response.data)) {
       return {
         items: response.data
@@ -20,7 +20,7 @@ export const fetchPayments = async () => {
 
 export const deletePayment = async (paymentId) => {
   try {
-    const response = await axios.delete(`${url}/Payments/${paymentId}`);
+    const response = await api.delete(`${url}/Payments/${paymentId}`);
     return response.data;
   } catch (error) {
     console.error('Error deleting payment:', error.response ? error.response.data : error.message);
@@ -30,7 +30,7 @@ export const deletePayment = async (paymentId) => {
 
 export const generatePaymentToken = async (bookingId) => {
   try {
-    const response = await axios.get(`${url}/Payments/GeneratePaymentToken/${bookingId}`);
+    const response = await api.get(`${url}/Payments/GeneratePaymentToken/${bookingId}`);
     return response.data;
   } catch (error) {
     console.error('Error generating payment token:', error.response ? error.response.data : error.message);
@@ -38,9 +38,9 @@ export const generatePaymentToken = async (bookingId) => {
   }
 };
 
-export const processPayment = async (token) => {
+export const processPayment = async (role,token) => {
   try {
-    const response = await axios.post(`${url}/Payments/ProcessPayment?token=${token}`);
+    const response = await api.post(`${url}/Payments/ProcessPayment?role=${role}&token=${token}`);
     return response.data;
   } catch (error) {
     console.error('Error processing payment:', error.response ? error.response.data : error.message);
@@ -50,7 +50,7 @@ export const processPayment = async (token) => {
 
 export const fetchPaymentById = async (paymentId) => {
   try {
-    const response = await axios.get(`${url}/Payments/${paymentId}`);
+    const response = await api.get(`${url}/Payments/${paymentId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching payment by ID:', error.response ? error.response.data : error.message);

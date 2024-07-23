@@ -57,12 +57,13 @@ const Login = () => {
         console.log("Token:", res.token);
         console.log("Role:", userRole);
 
-        toast.success("Login successful!");
 
         // Navigate based on user role
         if (userRole === 'Admin') {
+        toast.success("Login successful!");
           navigate("/admin/Users");
         } else if (userRole === 'Staff') {
+          toast.success("Login successful!");
           navigate("/Users");
         } else {
           navigate("/login");
@@ -111,9 +112,9 @@ const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <a href="#">Forgot Password</a>
-          <button type="submit" className="signInBtn">
-            {loading && <ClipLoader size={15} color="#fff" />}
+          <a href="/forgot-pass">Forgot Password</a>
+          <button type="submit" className="signInBtn" style={{ marginTop: "15px" }}>
+            {loading && <ClipLoader width={25} size={25} color="#fff" />}
             {!loading && "Sign In"}
           </button>
           {message && (

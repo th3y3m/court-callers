@@ -1,11 +1,11 @@
-import axios from 'axios';
 
+import api from './api';
 const url = 'https://courtcaller.azurewebsites.net/api';
 
 export const fetchNews = async (pageNumber = 1, pageSize = 10, searchQuery = '') => {
   try {
     const params = { pageNumber, pageSize, searchQuery };
-    const response = await axios.get(`${url}/News`, { params });
+    const response = await api.get(`${url}/News`, { params });
 
     if (response.data && Array.isArray(response.data.data)) {
       const items = response.data.data;
@@ -22,7 +22,7 @@ export const fetchNews = async (pageNumber = 1, pageSize = 10, searchQuery = '')
 
 export const fetchNewsDetail = async (newsId) => {
   try {
-    const response = await axios.get(`${url}/News/${newsId}`);
+    const response = await api.get(`${url}/News/${newsId}`);
     if (response.data) {
       return response.data;
     } else {
@@ -39,7 +39,7 @@ export const createNews = async (newsData) => {
     const formData = new FormData();
     formData.append('NewsImage', newsData.image);
 
-    const response = await axios.post(`${url}/News`, formData, {
+    const response = await api.post(`${url}/News`, formData, {
       params: {
         Title: newsData.title,
         Content: newsData.content,
@@ -61,7 +61,7 @@ export const createNews = async (newsData) => {
 
 export const deleteNews = async (newsId) => {
   try {
-    const response = await axios.delete(`${url}/News/${newsId}`);
+    const response = await api.delete(`${url}/News/${newsId}`);
     return response.data;
   } catch (error) {
     console.error('Error deleting news:', error.response ? error.response.data : error.message);
@@ -92,7 +92,7 @@ export const updateNews = async (newsId, newsData) => {
       console.log(`${pair[0]}: ${pair[1]}`);
     }
 
-    const response = await axios.put(`${url}/News/EditNews?id=${newsId}`, formData, {
+    const response = await api.put(`${url}/News/EditNews?id=${newsId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

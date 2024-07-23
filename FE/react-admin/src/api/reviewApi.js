@@ -1,5 +1,5 @@
-import axios from 'axios';
 
+import api from './api';
 const url = 'https://courtcaller.azurewebsites.net/api';
 
 const handleError = (error, action) => {
@@ -10,7 +10,7 @@ const handleError = (error, action) => {
 export const fetchReviews = async (pageNumber = 1, pageSize = 10, searchQuery = '') => {
   try {
     const params = { pageNumber, pageSize, searchQuery };
-    const response = await axios.get(`${url}/Reviews`, { params });
+    const response = await api.get(`${url}/Reviews`, { params });
 
     if (response.data && Array.isArray(response.data.data)) {
       return {
@@ -27,7 +27,7 @@ export const fetchReviews = async (pageNumber = 1, pageSize = 10, searchQuery = 
 
 export const createReview = async (reviewData) => {
   try {
-    const response = await axios.post(`${url}/Reviews`, reviewData);
+    const response = await api.post(`${url}/Reviews`, reviewData);
     return response.data;
   } catch (error) {
     handleError(error, 'creating review');
@@ -36,7 +36,7 @@ export const createReview = async (reviewData) => {
 
 export const updateReview = async (id, reviewData) => {
   try {
-    const response = await axios.put(`${url}/Reviews/${id}`, reviewData);
+    const response = await api.put(`${url}/Reviews/${id}`, reviewData);
     return response.data;
   } catch (error) {
     handleError(error, 'updating review');
@@ -45,7 +45,7 @@ export const updateReview = async (id, reviewData) => {
 
 export const deleteReview = async (id) => {
   try {
-    const response = await axios.delete(`${url}/Reviews/${id}`);
+    const response = await api.delete(`${url}/Reviews/${id}`);
     return response.data;
   } catch (error) {
     handleError(error, 'deleting review');
@@ -55,7 +55,7 @@ export const deleteReview = async (id) => {
 // New function to fetch user email by ID
 export const fetchUserEmailById = async (userId) => {
   try {
-    const response = await axios.get(`${url}/Users/${userId}`);
+    const response = await api.get(`${url}/Users/${userId}`);
     return response.data.email;
   } catch (error) {
     handleError(error, 'fetching user email');

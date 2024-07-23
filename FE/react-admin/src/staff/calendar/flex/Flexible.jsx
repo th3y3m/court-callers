@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Button, TextField, FormControl, Select, MenuItem } from "@mui/material";
-import { validateRequired, validateNumber } from "../../../scenes/formValidation";
+import { validateRequired, validateNumber, flexValidation } from "../../../scenes/formValidation";
 import { fetchBranches, fetchBranchById } from '../../../api/branchApi';
-import { fetchUserDetailByEmail, fetchUserDetail } from "../../../api/userApi";
+import { fetchUserDetailByEmail, fetchUserDetail ,fetchUserDetailByEmailVer2} from "../../../api/userApi";
 import { useNavigate } from "react-router-dom";
 import { checkBookingTypeFlex } from "../../../api/bookingApi";
 
@@ -20,6 +20,13 @@ const Flexible = () => {
     email: '',
     numberOfSlot: '',
   });
+
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
+  const [flexValidate, setFlexValidate] = useState({
+    isValid: true,
+    message: "",
+});
 
   const navigate = useNavigate();
 
@@ -61,6 +68,16 @@ const Flexible = () => {
         email: emailValidation.message,
         numberOfSlot: numberOfSlotValidation.message,
       });
+      return;
+    }
+
+    const flexValidate = flexValidation(numberOfSlot)
+
+    setFlexValidate(flexValidate);
+
+    if(!flexValidate.isValid){
+      setMessage("Please try again");
+      setMessageType("error");
       return;
     }
 
@@ -200,7 +217,7 @@ const Flexible = () => {
                   fullWidth
                   sx={{ marginBottom: '10px', marginRight: '10px' }}
                   value={email}
-                  onChange={(e) => handleChange('email', e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   InputProps={{
                     sx: {
                       '& .MuiInputBase-input': {
@@ -255,10 +272,15 @@ const Flexible = () => {
                   Number of Slots
                 </Typography>
                 <TextField
+                className={
+                  flexValidate.isValid ? "" : "error-input"
+                }
                   placeholder="Enter Number of Slots"
                   fullWidth
+                  type="number"
+                  required
                   value={numberOfSlot}
-                  onChange={(e) => handleChange('numberOfSlot', e.target.value)}
+                  onChange={(e) => setNumberOfSlot(e.target.value)}
                   error={Boolean(errors.numberOfSlot)}
                   helperText={errors.numberOfSlot}
                   InputProps={{
@@ -273,6 +295,9 @@ const Flexible = () => {
                     border: "1px solid #e0e0e0",
                   }}
                 />
+                {flexValidate.message && (
+                <p className="errorVal">{flexValidate.message}</p>
+              )}
               </>
             )}
 

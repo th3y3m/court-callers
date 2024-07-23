@@ -46,15 +46,8 @@ const Courts = () => {
     const getCourtsData = async () => {
       try {
         const data = await fetchCourtByBranchId(branchIdQuery, page + 1, pageSize, searchId);
-        const filteredData = data.filter(
-          (court) => court.branchId === branchIdQuery
-        );
-        const numberedData = filteredData.map((item, index) => ({
-          ...item,
-          rowNumber: index + 1 + page * pageSize,
-        }));
-        setCourtsData(numberedData);
-        setRowCount(filteredData.length);
+        setCourtsData(data.items);
+        setRowCount(data.totalCount);
       } catch (err) {
         setError(`Failed to fetch courts data: ${err.message}`);
       }
@@ -97,15 +90,8 @@ const Courts = () => {
     try {
       await deleteCourtById(courtId);
       const data = await fetchCourtByBranchId(branchIdQuery, page + 1, pageSize, searchId);
-      const filteredData = data.filter(
-        (court) => court.branchId === branchIdQuery
-      );
-      const numberedData = filteredData.map((item, index) => ({
-        ...item,
-        rowNumber: index + 1 + page * pageSize,
-      }));
-      setCourtsData(numberedData);
-      setRowCount(filteredData.length);
+      setCourtsData(data.items);
+      setRowCount(data.totalCount);
     } catch (err) {
       setError(`Failed to delete court: ${err.message}`);
     }
@@ -113,17 +99,15 @@ const Courts = () => {
   
 
   const handleSearch = async () => {
+    setPage(0); // Quay về trang đầu tiên
+    navigate(
+    `/admin/Courts?pageNumber=1&pageSize=${pageSize}&branchId=${branchIdQuery}&searchId=${searchId}`);
     try {
-      const data = await fetchCourtByBranchId(branchIdQuery, page + 1, pageSize, searchId);
-      const filteredData = data.filter(
-        (court) => court.branchId === branchIdQuery
-      );
-      const numberedData = filteredData.map((item, index) => ({
-        ...item,
-        rowNumber: index + 1 + page * pageSize,
-      }));
-      setCourtsData(numberedData);
-      setRowCount(filteredData.length);
+      const data = await fetchCourtByBranchId(branchIdQuery, 1, pageSize, searchId);
+        setCourtsData(data.items);
+        setRowCount(data.totalCount);
+        console.log('Row Count:', data.totalCount);
+    console.log('Page Size:', pageSize);
     } catch (err) {
       setError(`Failed to fetch court data: ${err.message}`);
     }
@@ -172,15 +156,8 @@ const Courts = () => {
       }
       setModalOpen(false);
       const data = await fetchCourtByBranchId(branchIdQuery, page + 1, pageSize, searchId);
-      const filteredData = data.filter(
-        (court) => court.branchId === branchIdQuery
-      );
-      const numberedData = filteredData.map((item, index) => ({
-        ...item,
-        rowNumber: index + 1 + page * pageSize,
-      }));
-      setCourtsData(numberedData);
-      setRowCount(filteredData.length);
+      setCourtsData(data.items);
+      setRowCount(data.totalCount);
       setCourtData({
         branchId: branchIdQuery,
         courtName: "",
@@ -328,7 +305,7 @@ const Courts = () => {
             mt="20px"
           >
             <Select value={pageSize} onChange={handlePageSizeChange}>
-              {[10, 15, 20, 25, 50].map((size) => (
+              {[10, 15, 20].map((size) => (
                 <MenuItem key={size} value={size}>
                   {size}
                 </MenuItem>
@@ -339,7 +316,7 @@ const Courts = () => {
               nextLabel="next >"
               onPageChange={handlePageClick}
               pageRangeDisplayed={5}
-              pageCount={Math.ceil(rowCount / pageSize)}
+              pageCount={Math.ceil(rowCount / pageSize)} // Số lượng trang dựa trên rowCount và pageSize
               previousLabel="< previous"
               renderOnZeroPageCount={null}
               containerClassName={"pagination"}

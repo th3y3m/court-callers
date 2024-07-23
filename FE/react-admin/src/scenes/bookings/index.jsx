@@ -6,9 +6,11 @@ import {
 import ReactPaginate from "react-paginate";
 import { useLocation, useNavigate } from "react-router-dom";
 import { tokens } from "../../theme";
-import { fetchBookings, deleteBooking, fetchUserEmailById } from "../../api/bookingApi";
+import { fetchBookings, deleteBooking, fetchUserEmailById, cancelBooking } from "../../api/bookingApi";
 import Header from "../../components/Header";
 import SearchIcon from "@mui/icons-material/Search";
+import { toast } from 'react-toastify';
+
 
 const useQuery = () => new URLSearchParams(useLocation().search);
 
@@ -67,22 +69,37 @@ const Bookings = () => {
     navigate(`/${userRole === 'Admin' ? 'admin/Bookings' : 'Bookings'}?pageNumber=1&pageSize=${pageSize}&searchQuery=${searchQuery.trim()}`);
   }, [navigate, pageSize, searchQuery, userRole]);
 
-  const handleDelete = async (id) => {
+  const handleCancel = async (id) => {
     try {
-      await deleteBooking(id);
-      setBookingsData((prevData) =>
-        prevData.filter((booking) => booking.bookingId !== id)
-      );
-      const data = await fetchBookings(page + 1, pageSize, searchQuery);
-      const bookingsWithEmail = await Promise.all(data.items.map(async (booking) => {
-        const email = await fetchUserEmailById(booking.id);
-        return { ...booking, email };
-      }));
-      setBookingsData(bookingsWithEmail);
-      setRowCount(data.totalCount);
+      const response = await cancelBooking(id);
+      console.log('respond', response);
+      console.log('respond status', response.status);
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        
+        // Cập nhật trạng thái cục bộ một cách lạc quan
+        setBookingsData((prevData) =>
+          prevData.map((booking) =>
+            booking.bookingId === id ? { ...booking, status: 'Cancelled' } : booking
+          )
+        );
+  
+        // Lấy lại dữ liệu để đảm bảo tính nhất quán với server
+        const data = await fetchBookings(page + 1, pageSize, searchQuery);
+        const bookingsWithEmail = await Promise.all(data.items.map(async (booking) => {
+          const email = await fetchUserEmailById(booking.id);
+          return { ...booking, email };
+        }));
+        setBookingsData(bookingsWithEmail);
+        setRowCount(data.totalCount);
+      }
     } catch (error) {
-      console.error(`Failed to delete booking with id ${id}:`, error);
-      setError(`Failed to delete booking with id ${id}: ${error.message}`);
+      if (error.response && error.response.status === 400) {
+        toast.error(error.response.data.error);
+      } else {
+        console.error(`Failed to cancel booking with id ${id}:`, error);
+        setError(`Failed to cancel booking with id ${id}: ${error.message}`);
+      }
     }
   };
 
@@ -138,12 +155,12 @@ const Bookings = () => {
                         <TableCell align="center">
                           <Box display="flex" justifyContent="center" alignItems="center">
                             <Button
-                              onClick={() => handleDelete(row.bookingId)}
+                              onClick={() => handleCancel(row.bookingId)}
                               variant="contained"
                               size="small"
                               style={{ backgroundColor: colors.redAccent[400], color: colors.primary[900] }}
                             >
-                              Delete
+                              Cancel
                             </Button>
                           </Box>
                         </TableCell>

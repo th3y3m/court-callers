@@ -9,6 +9,9 @@ import './style.css';
 import { storageDb } from '../../firebase';
 import { getDownloadURL, ref, uploadBytes, deleteObject } from 'firebase/storage';
 import { v4 } from 'uuid';
+import { validateYob } from '../formValidation';
+import { toast } from 'react-toastify';
+
 
 const UserDetails = () => {
   const theme = useTheme();
@@ -22,6 +25,9 @@ const UserDetails = () => {
   const [image, setImage] = useState(null);
   const [imageRef, setImageRef] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+  const [yearOfBirthError, setYearOfBirthError] = useState(null);
+
+  
 
   useEffect(() => {
     const getUserDetail = async () => {
@@ -46,6 +52,15 @@ const UserDetails = () => {
       ...prevUser,
       [field]: value,
     }));
+
+    if (field === 'yearOfBirth') {
+      const validation = validateYob(value);
+      if (!validation.isValid) {
+        setYearOfBirthError(validation.message);
+      } else {
+        setYearOfBirthError(null);
+      }
+    }
   };
 
   const handleProfilePictureChange = (event) => {
@@ -66,6 +81,10 @@ const UserDetails = () => {
   };
 
   const handleSave = async () => {
+    if (yearOfBirthError) {
+      toast.error('Please correct the errors before saving.');
+      return;
+    }
     try {
       if (!role && user.role) {
         setRole(user.role);
@@ -184,6 +203,7 @@ const UserDetails = () => {
                 <Box mb={2}>
                   <Typography variant="h6">Year of Birth</Typography>
                   {editMode ? (
+                    <>
                     <TextField
                       fullWidth
                       type="number"
@@ -203,7 +223,13 @@ const UserDetails = () => {
                           },
                         },
                       }}
-                    />
+                        />
+                        {yearOfBirthError && (
+                          <Typography color="error" variant="body2">
+                            {yearOfBirthError}
+                          </Typography>
+                        )}
+                      </>
                   ) : (
                     <Typography>{user.yearOfBirth || 'N/A'}</Typography>
                   )}

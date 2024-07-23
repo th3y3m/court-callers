@@ -1,11 +1,11 @@
-import axios from 'axios';
 
+import api from './api';
 const url = 'https://courtcaller.azurewebsites.net/api';
 
 export const fetchBranches = async (pageNumber = 1, pageSize = 10, searchQuery = '') => {
   try {
     const params = { pageNumber, pageSize, searchQuery };
-    const response = await axios.get(`${url}/Branches`, { params });
+    const response = await api.get(`${url}/Branches`, { params });
 
     if (response.data && Array.isArray(response.data.data)) {
       const items = response.data.data;
@@ -22,7 +22,7 @@ export const fetchBranches = async (pageNumber = 1, pageSize = 10, searchQuery =
 
 export const fetchBranchById = async (branchId) => {
   try {
-    const response = await axios.get(`${url}/Branches/${branchId}`);
+    const response = await api.get(`${url}/Branches/${branchId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching branch data:', error.response ? error.response.data : error.message);
@@ -32,7 +32,7 @@ export const fetchBranchById = async (branchId) => {
 
 export const createBranch = async (branchData) => {
   try {
-    const response = await axios.post(`${url}/Branches`, branchData);
+    const response = await api.post(`${url}/Branches`, branchData);
     return response.data;
   } catch (error) {
     console.error('Error creating branch:', error.response ? error.response.data : error.message);
@@ -42,7 +42,7 @@ export const createBranch = async (branchData) => {
 
 export const updateBranch = async (branchId, branchData) => {
   try {
-    const response = await axios.put(`${url}/Branches/${branchId}`, branchData,
+    const response = await api.put(`${url}/Branches/${branchId}`, branchData,
 
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );
@@ -55,7 +55,7 @@ export const updateBranch = async (branchId, branchData) => {
 
 export const postPrice = async (priceData) => {
   try {
-    const response = await axios.post(`${url}/Prices/PostPrice`, priceData);
+    const response = await api.post(`${url}/Prices/PostPrice`, priceData);
     return response.data;
   } catch (error) {
     console.error('Error posting price:', error.response ? error.response.data : error.message);
@@ -65,7 +65,7 @@ export const postPrice = async (priceData) => {
 
 export const fetchPricesByBranchId = async (branchId) => {
   try {
-    const response = await axios.get(`${url}/Prices/branchId/${branchId}`);
+    const response = await api.get(`${url}/Prices/branchId/${branchId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching prices by branchId:', error.response ? error.response.data : error.message);

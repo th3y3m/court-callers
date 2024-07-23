@@ -207,7 +207,7 @@ const StaffSidebar = () => {
               setSelected={setSelected}
             />
             <Item
-              title="fixed"
+              title="Fixed"
               to="/fixed"
               icon={<CalendarTodayOutlinedIcon />}
               selected={selected}

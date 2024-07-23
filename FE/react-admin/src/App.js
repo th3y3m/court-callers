@@ -36,6 +36,7 @@ import BranchDetail from "./scenes/branches/BranchDetail";
 import News from "./scenes/news/news";
 import NewsViewDetail from "./scenes/news/NewsViewDetail";
 import ForgotPass from "./scenes/forgotPass/forgetPass";
+import ResetPassword from "./scenes/forgotPass/resetPassword";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -57,6 +58,8 @@ function App() {
           <Route index element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-pass" element={<ForgotPass />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
 
           {/* Routes for admin */}
           <Route path="/admin/*" element={<ProtectedRoute roles={["Admin"]}><Layout /></ProtectedRoute>}>

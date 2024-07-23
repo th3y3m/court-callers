@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap');
 
-.login-component {
+.forgot-box {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15,7 +15,21 @@
   font-family: 'Montserrat', sans-serif;
 }
 
-.container {
+.forgot-title{
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+
+}
+.signup-link{
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #333;
+  margin-top: 10px;
+}
+
+.forgot-container {
   background-color: #fff;
   border-radius: 20px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
@@ -23,6 +37,7 @@
   max-width: 100%;
   padding: 30px;
   text-align: center;
+  height: 300px;
 }
 
 h1 {
@@ -43,10 +58,10 @@ input {
   width: 100%;
   padding: 15px;
   margin: 10px 0;
-  border: 1px solid #ddd;
+  border: 1px solid #0c0c0c;
   border-radius: 8px;
   font-size: 14px;
-  background-color: #f5f5f5;
+  background-color: #ffffff;
 }
 
 input:focus {
@@ -67,36 +82,30 @@ a:hover {
   text-decoration: underline;
 }
 
-
-  button {
-    background-color: #28B463;
-    color: #fff;
-    font-size: 14px;
-    padding: 0;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    width: 338px; 
-    height: 50px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    position: relative;
-   }
-
+button {
+  background-color: #28B463;
+  color: #fff;
+  font-size: 14px;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 100%;
+}
 
 button:hover {
   background-color: #1D8348;
 }
 
-.error-message {
+.errorVal {
   color: red;
   font-size: 14px;
-  margin-top: 20px;
+  margin-top: 5px;
+  margin-bottom: 10px;
 }
 
 @media (max-width: 768px) {

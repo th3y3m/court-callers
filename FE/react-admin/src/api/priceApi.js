@@ -1,10 +1,10 @@
-  import axios from 'axios';
 
+  import api from './api';
   const url = 'https://courtcaller.azurewebsites.net/api';
 
   export const fetchPrice = async (branchId) => {
     try {
-      const response = await axios.post(`${url}/Prices/showprice`, null, {
+      const response = await api.post(`${url}/Prices/showprice`, null, {
         params: {
           branchId
         }
@@ -22,7 +22,7 @@
 
   export const fetchPriceByBranchID = async (branchId) => {
     try {
-      const response = await axios.get(`${url}/Prices/branchId/${branchId}`);
+      const response = await api.get(`${url}/Prices/branchId/${branchId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching prices:', error);
@@ -33,7 +33,7 @@
   // New method to fetch price by branchId, type, and isWeekend
   export const fetchPriceByBranchIDType = async (branchId, type, isWeekend) => {
     try {
-      const response = await axios.get(`${url}/Prices/branchId/${branchId}/type/${type}`, {
+      const response = await api.get(`${url}/Prices/branchId/${branchId}/type/${type}`, {
         params: {
           isWeekend
         }
@@ -48,7 +48,7 @@
 // Function to update price
 export const updatePrice = async (branchId, type, isWeekend, slotPrice) => {
   try {
-    const response = await axios.put(`${url}/Prices/UpdatePrice`, {
+    const response = await api.put(`${url}/Prices/UpdatePrice`, {
       branchId,
       type,
       isWeekend,

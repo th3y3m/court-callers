@@ -1,10 +1,9 @@
-import axios from 'axios';
-
+import api from './api';
 const url = 'https://courtcaller.azurewebsites.net/api';
 
 export const fetchTimeSlots = async () => {
   try {
-    const response = await axios.get(`${url}/TimeSlots`);
+    const response = await api.get(`${url}/TimeSlots`);
     return response.data;
   } catch (error) {
     console.error('Error fetching time slots data:', error);
@@ -14,7 +13,7 @@ export const fetchTimeSlots = async () => {
 
 export const createTimeSlot = async (newSlot) => {
   try {
-    const response = await axios.post(`${url}/TimeSlots`, newSlot);
+    const response = await api.post(`${url}/TimeSlots`, newSlot);
     return response.data;
   } catch (error) {
     console.error('Error creating time slot:', error);
@@ -24,7 +23,7 @@ export const createTimeSlot = async (newSlot) => {
 
 export const updateTimeSlotById = async (id, updatedSlot) => {
   try {
-    const response = await axios.put(`${url}/TimeSlots/${id}`, updatedSlot);
+    const response = await api.put(`${url}/TimeSlots/${id}`, updatedSlot);
     return response.data;
   } catch (error) {
     console.error('Error updating time slot:', error);
@@ -33,7 +32,7 @@ export const updateTimeSlotById = async (id, updatedSlot) => {
 };
 export const fetchTimeSlotByBookingId = async (bookingId) => {
   try {
-    const response = await axios.get(`${url}/TimeSlots/bookingId/${bookingId}`);
+    const response = await api.get(`${url}/TimeSlots/bookingId/${bookingId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching time slot by booking ID:', error);
@@ -43,7 +42,7 @@ export const fetchTimeSlotByBookingId = async (bookingId) => {
 
 export const addTimeSlotIfExistBooking = async (slotModel, bookingId) => {
   try {
-    const response = await axios.post(`${url}/TimeSlots/add_timeslot_if_exist_booking?bookingId=${bookingId}`, slotModel);
+    const response = await api.post(`${url}/TimeSlots/add_timeslot_if_exist_booking?bookingId=${bookingId}`, slotModel);
     return response.data;
   } catch (error) {
     console.error('Error adding time slot to existing booking:', error);
@@ -53,7 +52,7 @@ export const addTimeSlotIfExistBooking = async (slotModel, bookingId) => {
 
 export  const fetchUnavailableSlots = async (date, branchId) => {
   try {
-    const response = await axios.get(`${url}/TimeSlots/unavailable_slot`, {
+    const response = await api.get(`${url}/TimeSlots/unavailable_slot`, {
       params: {
         date: date,
         branchId: branchId
@@ -70,7 +69,7 @@ export  const fetchUnavailableSlots = async (date, branchId) => {
 //change slot
 export const changeSlot = async (slotId, updatedSlot) => {
   try {
-    const response = await axios.put(`${url}/TimeSlots/changeSlot/${slotId}`, updatedSlot);
+    const response = await api.put(`${url}/TimeSlots/changeSlot/${slotId}`, updatedSlot);
     return response.data;
   } catch (error) {
     console.error('Error changing time slot:', error);
