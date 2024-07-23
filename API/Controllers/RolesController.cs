@@ -1,4 +1,5 @@
 ﻿using BusinessObjects;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Services;
@@ -18,13 +19,15 @@ namespace API.Controllers
 
 		// GET: api/Roles
 		[HttpGet]
-		public async Task<ActionResult<IEnumerable<IdentityRole>>> GetRoles()
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<IdentityRole>>> GetRoles()
 		{
 			return _roleService.GetRoles();
 		}
 
         // GET: api/Roles/5
         [HttpGet("roleId/{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IdentityRole>> GetRole(string id)
         {
             var Role = _roleService.GetRole(id);
@@ -38,6 +41,7 @@ namespace API.Controllers
         }
 
         [HttpGet("userId/{userId}")]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<ActionResult<string[]>> GetRoleNameByUserId(string userId)
         {
             var Role = _roleService.GetRoleNameByUserId(userId);
@@ -52,6 +56,7 @@ namespace API.Controllers
 
         
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public IActionResult PutRole(string id,[FromBody] string role)
         {
             var roleUser =  _roleService.GetRoleNameByUserId(id);

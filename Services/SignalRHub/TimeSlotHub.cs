@@ -38,7 +38,7 @@ namespace Services.SignalRHub
             int count = _timeSlotService.CountTimeSlot(slotCheckModel);
             if (count <= 0)
             {
-                // Nếu thỏa mãn điều kiện, gửi lại dữ liệu cho tất cả các client
+                
                 await Clients.All.SendAsync("DisableSlot", slotCheckModel);
                 _logger.LogInformation("Slot disabled and sent to all clients: " + slotCheckModel);
             }

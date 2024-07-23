@@ -66,7 +66,7 @@ namespace Services
                     new Claim(ClaimTypes.Role, role),
                     //new Claim(ClaimTypes.NameIdentifier, user.UserName)
                 }),
-                Expires = DateTime.UtcNow.AddHours(1),
+                Expires = DateTime.UtcNow.AddHours(10),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 

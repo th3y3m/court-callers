@@ -100,19 +100,13 @@ namespace DAOs
 			return IdentityUser;
 		}
 
-        //public IdentityUser UpdateIdentityUser(string id, IdentityUser IdentityUser)
-        //{
-        //	IdentityUser oIdentityUser = GetIdentityUser(id);
-        //	if (oIdentityUser != null)
-        //	{
-        //		oIdentityUser.Point = IdentityUser.Point;
-        //		oIdentityUser.FullName = IdentityUser.FullName;
-        //		oIdentityUser.Status = IdentityUser.Status;
-        //		_dbContext.Update(oIdentityUser);
-        //		_dbContext.SaveChanges();
-        //	}
-        //	return oIdentityUser;
-        //}
+        public void UpdateIdentityUser(IdentityUser IdentityUser)
+        {
+
+                _dbContext.Update(IdentityUser);
+                _dbContext.SaveChanges();
+            
+        }
 
         public void DeleteUser(string id)
         {
@@ -150,7 +144,7 @@ namespace DAOs
             return oUser;
         }
 
-        public List<IdentityUser> SearchUserByEmail(string searchValue) => _dbContext.Users.Where(m => m.Email.Contains(searchValue)).ToList();
+        public List<IdentityUser> SearchUserByEmail(string searchValue) => _dbContext.Users.Where(m => m.Email.Equals(searchValue)).ToList();
 
         public IdentityUser GetUserByBookingId(string bookingId)
         {

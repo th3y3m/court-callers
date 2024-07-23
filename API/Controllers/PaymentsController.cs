@@ -10,6 +10,7 @@ using DAOs.Helper;
 using Services;
 using DAOs.Models;
 using Services.Interface;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
@@ -28,12 +29,15 @@ namespace API.Controllers
 
         // GET: api/Payments
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Payment>>> GetPayments()
         {
             return _paymentService.GetPayments();
         }
 
         [HttpGet("GetPayments")]
+        [Authorize]
+
         public async Task<ActionResult<PagingResponse<Payment>>> GetPayments([FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10)
         {
@@ -53,8 +57,36 @@ namespace API.Controllers
             return Ok(response);
         }
 
+        [HttpGet("GetPaymentsByDate")]
+        [Authorize]
+        public async Task<ActionResult<PagingResponse<Payment>>> GetPaymentsByDate(
+            [FromQuery] int? day, 
+            [FromQuery] int? month, 
+            [FromQuery] int? year,
+            [FromQuery] int pageNumber = 1, 
+            [FromQuery] int pageSize = 10
+            )
+        {
+
+            var pageResult = new PageResult
+            {
+                PageSize = pageSize,
+                PageNumber = pageNumber,
+            };
+            var (payments, total) = await _paymentService.GetPayments(pageResult, day, month, year);
+
+            var response = new PagingResponse<Payment>
+            {
+                Data = payments,
+                Total = total
+            };
+            return Ok(response);
+        }
+
 
         [HttpGet("bookingid/{bookingId}")]
+        [Authorize]
+
         public async Task<ActionResult<Payment>> GetPaymentByBookingId(string bookingId)
         {
             var payment = _paymentService.GetPaymentByBookingId(bookingId);
@@ -69,6 +101,8 @@ namespace API.Controllers
 
         // GET: api/Payments/5
         [HttpGet("{id}")]
+        [Authorize]
+
         public async Task<ActionResult<Payment>> GetPayment(string id)
         {
             var payment = _paymentService.GetPayment(id);
@@ -115,6 +149,8 @@ namespace API.Controllers
         // POST: api/Payments
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [Authorize]
+
         public async Task<ActionResult<Payment>> PostPayment(Payment payment)
         {
             _paymentService.AddPayment(payment);
@@ -124,6 +160,8 @@ namespace API.Controllers
 
         // DELETE: api/Payments/5
         [HttpDelete("{id}")]
+        [Authorize]
+
         public async Task<IActionResult> DeletePayment(string id)
         {
             var payment = _paymentService.GetPayment(id);
@@ -143,6 +181,8 @@ namespace API.Controllers
         //}
 
         [HttpGet("SearchByDate")]
+        [Authorize]
+
         public async Task<ActionResult<IEnumerable<Payment>>> SearchByDate(DateTime start, DateTime end)
         {
             return _paymentService.SearchByDate(start, end);
@@ -157,7 +197,7 @@ namespace API.Controllers
         }
 
         [HttpPost("ProcessPayment")]
-        public async Task<ActionResult> ProcessPayment( string token)
+        public async Task<ActionResult> ProcessPayment(string role ,string token)
         {
             //if (bookingId == null)
             //{
@@ -168,7 +208,7 @@ namespace API.Controllers
             //    });
             //}
             var bookingId = _tokenForPayment.ValidateToken(token);
-            var response = await _paymentService.ProcessBookingPayment(bookingId);
+            var response = await _paymentService.ProcessBookingPayment(role,bookingId);
             return Ok(response);
         }
 
@@ -205,6 +245,8 @@ namespace API.Controllers
 
 
         [HttpGet("SortPayment/{sortBy}")]
+        [Authorize]
+
         public async Task<ActionResult<IEnumerable<Payment>> > SortPayment(string sortBy, bool isAsc, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             var pageResult = new PageResult
@@ -216,6 +258,8 @@ namespace API.Controllers
         }
 
         [HttpGet("GetDailyRevenue")]
+        [Authorize]
+
         public async Task<ActionResult<decimal>> GetDailyRevenue()
         {
             try
@@ -237,6 +281,8 @@ namespace API.Controllers
         }
 
         [HttpGet("GetRevenueByDate")]
+        [Authorize]
+
         public async Task<ActionResult<decimal>> GetRevenueByDate(DateTime start, DateTime end)
         {   
             if (start > end)

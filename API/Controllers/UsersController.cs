@@ -10,6 +10,7 @@ using Services;
 using Microsoft.AspNetCore.Identity;
 using DAOs.Helper;
 using DAOs.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
@@ -27,6 +28,8 @@ namespace API.Controllers
 
         // GET: api/Users
         [HttpGet]
+        [Authorize]
+
         public async Task<ActionResult<PagingResponse<IdentityUser>>> GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string searchQuery = null)
         {
             var pageResult = new PageResult
@@ -60,6 +63,8 @@ namespace API.Controllers
 
         // GET: api/Users/5
         [HttpGet("{id}")]
+        [Authorize]
+
         public async Task<ActionResult<IdentityUser>> GetUser(string id)
         {
             var user = _userService.GetUser(id);
@@ -118,6 +123,7 @@ namespace API.Controllers
         //}
 
         [HttpPut("{id}/ban")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> BanUser(string id)
         {
             
@@ -131,6 +137,7 @@ namespace API.Controllers
 
 
         [HttpPut("{id}/unban")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UnbanUser(string id)
         {
             IdentityUser user = _userService.GetUser(id);
@@ -142,6 +149,8 @@ namespace API.Controllers
         }
 
         [HttpGet("GetUserDetailByUserEmail/{userEmail}")]
+        [Authorize]
+
         public async Task<ActionResult<IEnumerable<IdentityUser>>> GetUserByEmail(string userEmail)
         {
             if (string.IsNullOrEmpty(userEmail))

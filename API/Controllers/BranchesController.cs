@@ -93,6 +93,7 @@ namespace API.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
 
         [HttpPut("{id}")]
+        [Authorize(Roles="Admin")]
         public async Task<IActionResult> PutBranch(string id, [FromForm] PutBranch branchModel, [FromForm] List<string> ExistingImages)
         {
             var branch = _branchService.GetBranch(id);
@@ -157,6 +158,7 @@ namespace API.Controllers
 
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Branch>> PostBranch([FromForm] BranchModel branchModel)
         {
             var imageUrls = new List<string>();
@@ -184,6 +186,7 @@ namespace API.Controllers
 
         // DELETE: api/Branches/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteBranch(string id)
         {
             var branch = _branchService.GetBranch(id);

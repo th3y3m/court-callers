@@ -25,7 +25,7 @@ namespace Repositories
 			_userDao = userDAO;
 			
 		}
-
+        public void UpdateIdentityUser(IdentityUser IdentityUser) => _userDao.UpdateIdentityUser(IdentityUser);
         public IdentityUser AddUser(IdentityUser user) => _userDao.AddUser(user);
 
         //public void DeleteIdentityUser(string id) => UserDAO.DeleteIdentityUser(id);

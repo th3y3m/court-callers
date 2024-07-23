@@ -1,6 +1,7 @@
 ﻿using BusinessObjects;
 using DAOs.Helper;
 using DAOs.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Services;
@@ -48,6 +49,7 @@ namespace API.Controllers
             return Price;
         }
         [HttpPost("PostPrice")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Price>> PostPrice(PriceModel price)
         {
 
@@ -58,6 +60,7 @@ namespace API.Controllers
         // PUT: api/Prices/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("UpdatePrice")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PutPrice(PriceModel priceModel)
         {
 
@@ -84,6 +87,7 @@ namespace API.Controllers
 
         // DELETE: api/Prices/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeletePrice(string id)
         {
             var Price = _priceService.GetPrice(id);

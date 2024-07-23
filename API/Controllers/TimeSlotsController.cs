@@ -12,6 +12,7 @@ using Page = DAOs.Helper;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.SignalR;
 using Services.SignalRHub;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
@@ -63,6 +64,8 @@ namespace API.Controllers
 
         // GET: api/TimeSlots/5
         [HttpGet("{id}")]
+        [Authorize]
+
         public async Task<ActionResult<TimeSlot>> GetTimeSlot(string id)
         {
             var timeSlot = _timeSlotService.GetTimeSlot(id);
@@ -76,6 +79,8 @@ namespace API.Controllers
         }
 
         [HttpGet("bookingId/{bookingId}")]
+        [Authorize]
+
         public async Task<ActionResult<IEnumerable<TimeSlot>>> GetTimeSlotByBookingId(string bookingId)
         {
             var timeSlot = _timeSlotService.GetTimeSlotsByBookingId(bookingId);
@@ -91,6 +96,8 @@ namespace API.Controllers
         // PUT: api/TimeSlots/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
+        [Authorize]
+
         public async Task<IActionResult> PutTimeSlot(string id, SlotModel slotModel)
         {
             var timeSlot = _timeSlotService.GetTimeSlot(id);
@@ -107,6 +114,8 @@ namespace API.Controllers
         // POST: api/TimeSlots
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [Authorize]
+
         public async Task<ActionResult<TimeSlot>> PostTimeSlot(TimeSlot timeSlot)
         {
             _timeSlotService.AddTimeSlot(timeSlot);
@@ -137,6 +146,7 @@ namespace API.Controllers
         }
 
         [HttpPut("changeSlot/{slotId}")]
+        [Authorize(Roles = "Customer")]
         public async Task<ActionResult<TimeSlot>> ChangeSlot(SlotModel slotModel, string slotId)
         {
             TimeSlot timeSlot = _timeSlotService.ChangeSlot(slotModel, slotId);
@@ -155,6 +165,8 @@ namespace API.Controllers
         }
 
         [HttpGet("userId/{userId}")]
+        [Authorize]
+
         public async Task<ActionResult<IEnumerable<TimeSlot>>> GetTimeSlotsByUserId(string userId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             var pageResult = new Page.PageResult
@@ -167,6 +179,8 @@ namespace API.Controllers
         }
 
         [HttpGet("sortSlot/{sortBy}")]
+        [Authorize]
+
         public async Task<ActionResult<IEnumerable<TimeSlot>>> SortTimeSlot(string sortBy, bool isAsc, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             var pageResult = new Page.PageResult

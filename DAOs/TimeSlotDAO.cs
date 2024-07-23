@@ -419,7 +419,7 @@ namespace DAOs
             }
 
             var unavailableSlots = new List<TimeSlotModel>();
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i < 8; i++)
             {
                 var currentday = date.AddDays(i);
                 var allTimeSlots = _dbContext.TimeSlots

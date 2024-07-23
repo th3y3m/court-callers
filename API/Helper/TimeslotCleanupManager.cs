@@ -25,13 +25,16 @@ namespace API.Helper
                     try
                     {
                         SqlCommand command = new SqlCommand(
-                            @"DELETE FROM timeslots
+                            @"DECLARE @CurrentDateTime DATETIME;
+SET @CurrentDateTime = GETDATE() AT TIME ZONE 'UTC' AT TIME ZONE 'SE Asia Standard Time';
+DELETE FROM timeslots
 WHERE BookingId IN (
-    SELECT bookingid FROM bookings WHERE status = 'pending'
-) AND DATEDIFF(minute, Created_at, GETDATE()) > 15
+    SELECT bookingid FROM bookings WHERE status = 'Pending'
+) AND DATEDIFF(minute, Created_at, @CurrentDateTime) > 15;
+
 UPDATE bookings
 SET status = 'cancel'
-WHERE status = 'pending' AND DATEDIFF(minute, BookingDate , GETDATE()) > 15;",
+WHERE status = 'pending' AND DATEDIFF(minute, BookingDate, @CurrentDateTime) > 15;",
                             connection, transaction);
 
                         int rowsAffected = await command.ExecuteNonQueryAsync();

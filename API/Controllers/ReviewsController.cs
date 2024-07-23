@@ -10,6 +10,7 @@ using Services;
 using Microsoft.AspNetCore.Identity;
 using DAOs.Helper;
 using DAOs.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
@@ -62,6 +63,8 @@ namespace API.Controllers
         // PUT: api/Reviews/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
+        [Authorize]
+
         public async Task<IActionResult> PutReview(string id, ReviewModel reviewModel)
         {
             var review = _reviewService.GetReview(id);
@@ -78,6 +81,8 @@ namespace API.Controllers
         // POST: api/Reviews
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [Authorize]
+
         public async Task<ActionResult<Review>> PostReview(ReviewModel reviewModel)
         {
             var review = _reviewService.AddReview(reviewModel);
@@ -87,6 +92,8 @@ namespace API.Controllers
 
         // DELETE: api/Reviews/5
         [HttpDelete("{id}")]
+        [Authorize]
+
         public async Task<IActionResult> DeleteReview(string id)
         {
             var review = _reviewService.GetReview(id);

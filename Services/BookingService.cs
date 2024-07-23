@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DAOs.Models;
 using DAOs.Helper;
 using Services.Interface;
+using DAOs;
 
 namespace Services
 {
@@ -72,14 +73,31 @@ namespace Services
 
         public async Task DeleteBookingAndSetTimeSlotAsync(string bookingId) => await _bookingRepository.DeleteBookingAndSetTimeSlotAsync(bookingId);
 
-        public void CancelBooking(string bookingId) => _bookingRepository.CancelBooking(bookingId);
+        public async Task CancelBooking(string bookingId)
+        {
+            await _bookingRepository.CancelBooking(bookingId);
+        }
 
         public async Task<List<Booking>> SortBookings(string? sortBy, bool isAsc, PageResult pageResult) => await _bookingRepository.SortBookings(sortBy, isAsc, pageResult);
 
         public (string, int) NumberOfSlotsAvailable(string userId, string branchId) => _bookingRepository.NumberOfSlotsAvailable(userId, branchId);
 
-        public async Task<(IEnumerable<BookingResponse>, int count)> GetDailyBookings() => await _bookingRepository.GetDailyBookings();
+        public async Task<(int todayCount, double changePercentage)> GetDailyBookings(string? branchId) => await _bookingRepository.GetDailyBookings(branchId);
 
-        public async Task<(IEnumerable<WeeklyBookingResponse>, decimal)> GetWeeklyBookingsAsync() => await _bookingRepository.GetWeeklyBookingsAsync();
+        public async Task<(int weeklyCount, double changePercentage)> GetWeeklyBookingsAsync(string? branchId) => await _bookingRepository.GetWeeklyBookingsAsync(branchId);
+        public async Task<(int weeklyCount, double changePercentage)> GetMonthlyBookingsAsync(string? branchId) => await _bookingRepository.GetMonthlyBookingsAsync(branchId);
+        public async Task<int[]> GetBookingsFromStartOfWeek(string? branchId) => await _bookingRepository.GetBookingsFromStartOfWeek(branchId);
+        public async Task<int[]> GetWeeklyBookingsFromStartOfMonth(string? branchId) => await _bookingRepository.GetWeeklyBookingsFromStartOfMonth(branchId);
+        public async Task<int[]> GetMonthlyBookingsFromStartOfYear(string? branchId) => await _bookingRepository.GetMonthlyBookingsFromStartOfYear(branchId);
+
+        public async Task<(decimal todayRevenue, decimal changePercentage)> GetDailyRevenue(string? branchId) => await _bookingRepository.GetDailyRevenue(branchId);
+        public async Task<(decimal todayRevenue, decimal changePercentage)> GetWeeklyRevenueAsync(string? branchId) => await _bookingRepository.GetWeeklyRevenueAsync(branchId);
+        public async Task<(decimal todayRevenue, decimal changePercentage)> GetMonthlyRevenueAsync(string? branchId) => await _bookingRepository.GetMonthlyRevenueAsync(branchId);
+        public async Task<decimal[]> GetRevenueFromStartOfWeek(string? branchId) => await _bookingRepository.GetRevenueFromStartOfWeek(branchId);
+        public async Task<decimal[]> GetWeeklyRevenueFromStartOfMonth(string? branchId) => await _bookingRepository.GetWeeklyRevenueFromStartOfMonth(branchId);
+        public async Task<decimal[]> GetMonthlyRevenueFromStartOfYear(string? branchId) => await _bookingRepository.GetMonthlyRevenueFromStartOfYear(branchId);
+
+
+
     }
 }

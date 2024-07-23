@@ -35,6 +35,7 @@ namespace API.Controllers
 
         // GET: api/Bookings
         [HttpGet]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<ActionResult<PagingResponse<Booking>>> GetBookings([FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10,
            [FromQuery] string searchQuery = null)
@@ -44,7 +45,7 @@ namespace API.Controllers
                 PageSize = pageSize,
                 PageNumber = pageNumber,
             };
-            var (bookings,total) = await _bookingService.GetBookings(pageResult,searchQuery);
+            var (bookings, total) = await _bookingService.GetBookings(pageResult, searchQuery);
 
             var response = new PagingResponse<Booking>
             {
@@ -56,6 +57,7 @@ namespace API.Controllers
 
         // GET: api/Bookings/5
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<Booking>> GetBooking(string id)
         {
             var booking = _bookingService.GetBooking(id);
@@ -69,6 +71,7 @@ namespace API.Controllers
         }
 
         [HttpGet("userId/{userId}")]
+        [Authorize]
         public async Task<ActionResult<Booking>> GetBookingByUserId(string userId)
         {
             var bookings = _bookingService.GetBookingsByUserId(userId);
@@ -100,10 +103,11 @@ namespace API.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
 
 
-        
+
 
         // DELETE: api/Bookings/5
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteBooking(string id)
         {
             var booking = _bookingService.GetBooking(id);
@@ -123,18 +127,21 @@ namespace API.Controllers
         //}
 
         [HttpGet("status/{status}")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Booking>>> GetBookingsByStatus(string status)
         {
             return _bookingService.GetBookingsByStatus(status).ToList();
         }
 
         [HttpGet("search/{start}/{end}")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Booking>>> SearchBookingsByTime(DateTime start, DateTime end)
         {
             return _bookingService.SearchBookingsByTime(start, end).ToList();
         }
 
         [HttpGet("search/{userId}")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Booking>>> GetBookingsByUser(string userId,
             [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
@@ -157,6 +164,7 @@ namespace API.Controllers
         //}
 
         [HttpPost("reserve-slot")]
+        [Authorize]
         public async Task<IActionResult> ReserveSlotV2(SlotModel[] slotModels, string userId)
         {
             try
@@ -174,21 +182,30 @@ namespace API.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-
-        [HttpDelete("cancelBooking/{bookingId}")]
+        [HttpDelete("cancel/{bookingId}")]
         public async Task<IActionResult> CancelBooking(string bookingId)
         {
-            if (string.IsNullOrEmpty(bookingId))
+            try
             {
-                return BadRequest("Invalid booking id.");
+                await _bookingService.CancelBooking(bookingId);
+                return Ok(new { message = "Booking cancelled successfully." });
             }
-
-            _bookingService.CancelBooking(bookingId);
-
-            return Ok("Booking cancelled successfully.");
+            catch (InvalidOperationException ex)
+            {
+                // Log the exception details here if necessary
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Handle other unexpected exceptions
+                return StatusCode(500, new { error = "An error occurred while cancelling the booking." });
+            }
         }
 
+
+
         [HttpDelete("delete/{bookingId}")]
+        [Authorize]
         public async Task<IActionResult> DeleteBookingAndSetTimeSlot(string bookingId)
         {
             if (string.IsNullOrEmpty(bookingId))
@@ -203,6 +220,7 @@ namespace API.Controllers
 
         //post booking type flex
         [HttpPost("flex")]
+        [Authorize]
         public async Task<ActionResult<Booking>> PostBookingTypeFlex(string userId, int numberOfSlot, string branchId)
         {
 
@@ -211,6 +229,7 @@ namespace API.Controllers
         }
 
         [HttpPost("fix-slot")]
+        [Authorize]
         public async Task<IActionResult> PostBookingTypeFix([FromQuery] int numberOfMonths,
             [FromQuery] string[] dayOfWeek, [FromQuery] DateOnly startDate, [FromBody] TimeSlotModel[] timeSlotModel,
             [FromQuery] string userId, string branchId)
@@ -221,6 +240,7 @@ namespace API.Controllers
         }
 
         [HttpGet("sortBooking/{sortBy}")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Booking>>> SortBookings(string sortBy, bool isAsc, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             var pageResult = new Page.PageResult
@@ -251,7 +271,8 @@ namespace API.Controllers
         //}
 
         [HttpGet("checkbookingtypeflex")]
-        public  ActionResult<CheckBookingTypeFlexModel> CheckAvaiableSlotsFromBookingTypeFlex(string userId, string branchId)
+        [Authorize]
+        public ActionResult<CheckBookingTypeFlexModel> CheckAvaiableSlotsFromBookingTypeFlex(string userId, string branchId)
         {
             var bookingFlexModel = _bookingService.NumberOfSlotsAvailable(userId, branchId);
             var result = new CheckBookingTypeFlexModel
@@ -259,7 +280,7 @@ namespace API.Controllers
                 bookingId = bookingFlexModel.Item1,
                 numberOfSlot = bookingFlexModel.Item2
             };
-            
+
             return Ok(result);
         }
 
@@ -281,11 +302,11 @@ namespace API.Controllers
             //"branchId": "B001",
             //"courtId": "C002",
             //"slotDate": "2024-07-01", nên tạo các thứ này
-            
+
             var qrData = new
             {
                 BookingId = booking.Result.BookingId,
-                
+
             };
             string qrString = JsonConvert.SerializeObject(qrData);
             string qrCodeBase64 = Qr.QrCode.GenerateQRCode(qrString);
@@ -294,24 +315,187 @@ namespace API.Controllers
         }
 
         [HttpGet("daily-bookings")]
-        public async Task<ActionResult<PagingResponse<BookingResponse>>> GetDailyBookings()
+        [Authorize]
+
+        public async Task<ActionResult<DailyBookingResponse>> GetDailyBookings(string? branchId)
         {
-            var (dailyBookings,total) = await _bookingService.GetDailyBookings();
-            var response = new PagingResponse<BookingResponse>
+            var (todayCount, changePercentage) = await _bookingService.GetDailyBookings(branchId);
+
+            var response = new DailyBookingResponse
             {
-                Data = dailyBookings,
-                Total = total
+                TodayCount = todayCount,
+                ChangePercentage = changePercentage
             };
+
             return Ok(response);
         }
 
+
         [HttpGet("weekly-bookings")]
-        public async Task<IActionResult> GetWeeklyBookings()
+        [Authorize]
+        public async Task<ActionResult<DailyBookingResponse>> GetWeeklyBookings(string? branchId)
         {
-            var result = await _bookingService.GetWeeklyBookingsAsync();
-            return Ok(new { data = result.Item1, total = result.Item2 });
+            var (weeklyCount, changePercentage) = await _bookingService.GetWeeklyBookingsAsync(branchId);
+
+            var response = new DailyBookingResponse
+            {
+                TodayCount = weeklyCount,
+                ChangePercentage = changePercentage
+            };
+
+            return Ok(response);
         }
 
-       
+        [HttpGet("monthly-bookings")]
+        [Authorize]
+        public async Task<ActionResult<DailyBookingResponse>> GetMonthlyBookings(string? branchId)
+        {
+            var (monthlyCount, changePercentage) = await _bookingService.GetMonthlyBookingsAsync(branchId);
+
+            var response = new DailyBookingResponse
+            {
+                TodayCount = monthlyCount,
+                ChangePercentage = changePercentage
+            };
+
+            return Ok(response);
+        }
+
+        [HttpGet("bookings-from-start-of-week")]
+        [Authorize]
+        public async Task<IActionResult> GetBookingsFromStartOfWeek(string? branchId)
+        {
+            try
+            {
+                var result = await _bookingService.GetBookingsFromStartOfWeek(branchId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error");
+            }
+        }
+        [HttpGet("weekly-bookings-from-start-of-month")]
+
+        public async Task<IActionResult> GetWeeklyBookingsFromStartOfMonth(string? branchId)
+        {
+            try
+            {
+                var result = await _bookingService.GetWeeklyBookingsFromStartOfMonth(branchId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpGet("monthly-bookings-from-start-of-year")]
+        [Authorize]
+        public async Task<IActionResult> GetMonthlyBookingsFromStartOfYear(string? branchId)
+        {
+            try
+            {
+                var result = await _bookingService.GetMonthlyBookingsFromStartOfYear(branchId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpGet("daily-revenue")]
+        [Authorize]
+        public async Task<ActionResult<RevenueResponse>> GetDailyRevenue(string? branchId)
+        {
+            var (todayRevenue, changePercentage) = await _bookingService.GetDailyRevenue(branchId);
+
+            var response = new RevenueResponse
+            {
+                Revenue = todayRevenue,
+                ChangePercentage = changePercentage
+            };
+
+            return Ok(response);
+        }
+
+        [HttpGet("weekly-revenue")]
+        [Authorize]
+        public async Task<ActionResult<RevenueResponse>> GetWeeklyRevenue(string? branchId)
+        {
+            var (weeklyRevenue, changePercentage) = await _bookingService.GetWeeklyRevenueAsync(branchId);
+
+            var response = new RevenueResponse
+            {
+                Revenue = weeklyRevenue,
+                ChangePercentage = changePercentage
+            };
+
+            return Ok(response);
+        }
+
+        [HttpGet("monthly-revenue")]
+        [Authorize]
+        public async Task<ActionResult<RevenueResponse>> GetMonthlyRevenue(string? branchId)
+        {
+            var (monthlyRevenue, changePercentage) = await _bookingService.GetMonthlyRevenueAsync(branchId);
+
+            var response = new RevenueResponse
+            {
+                Revenue = monthlyRevenue,
+                ChangePercentage = changePercentage
+            };
+
+            return Ok(response);
+        }
+
+        [HttpGet("revenue-from-start-of-week")]
+        [Authorize]
+        public async Task<IActionResult> GetRevenueFromStartOfWeek(string? branchId)
+        {
+            try
+            {
+                var result = await _bookingService.GetRevenueFromStartOfWeek(branchId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpGet("weekly-revenue-from-start-of-month")]
+        [Authorize]
+        public async Task<IActionResult> GetWeeklyRevenueFromStartOfMonth(string? branchId)
+        {
+            try
+            {
+                var result = await _bookingService.GetWeeklyRevenueFromStartOfMonth(branchId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpGet("monthly-revenue-from-start-of-year")]
+        [Authorize]
+        public async Task<IActionResult> GetMonthlyRevenueFromStartOfYear(string? branchId)
+        {
+            try
+            {
+                var result = await _bookingService.GetMonthlyRevenueFromStartOfYear(branchId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+
     }
 }

@@ -23,7 +23,7 @@ namespace Services
         public Court AddCourt(CourtModel courtModel) => _courtRepository.AddCourt(courtModel);
         public void DeleteCourt(string id) => _courtRepository.DeleteCourt(id);
         public Court GetCourt(string id) => _courtRepository.GetCourt(id);
-        public async Task<List<Court>> GetCourts(PageResult pageResult, string searchQuery = null) => await _courtRepository.GetCourts(pageResult, searchQuery);
+        public async Task<(List<Court>, int total)> GetCourts(PageResult pageResult, string searchQuery = null) => await _courtRepository.GetCourts(pageResult, searchQuery);
         public Court UpdateCourt(string id, CourtModel courtModel) => _courtRepository.UpdateCourt(id, courtModel);
 
         public int GetNumberOfCourtsByBranchId(string branchId) => _courtRepository.GetNumberOfCourtsByBranchId(branchId);
@@ -39,7 +39,7 @@ namespace Services
 
         public List<Court> AvailableCourts(SlotModel slotModel) => _courtRepository.AvailableCourts(slotModel);
 
-        public async Task<List<Court>> GetCourtsByBranchId(string branchId, PageResult pageResult, string searchQuery = null)
+        public async Task<(List<Court>,int total)> GetCourtsByBranchId(string branchId, PageResult pageResult, string searchQuery = null)
 => await _courtRepository.GetCourtsByBranchId(branchId, pageResult, searchQuery);
     }
 

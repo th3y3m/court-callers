@@ -2,6 +2,7 @@
 using DAOs.Helper;
 using DAOs.Models;
 using Firebase.Storage;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
 using System.Text.Json;
@@ -74,6 +75,7 @@ namespace API.Controllers
         }
 
         [HttpPut("EditNews")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PutNew(string id, NewsModel news)
         {
             var file = news.NewsImage;
@@ -95,6 +97,7 @@ namespace API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<News>> PostNew(NewsModel newsModel)
         {
 
@@ -118,6 +121,7 @@ namespace API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteNew(string id)
         {
             newsService.DeleteNew(id);

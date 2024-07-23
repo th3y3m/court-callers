@@ -146,7 +146,21 @@ namespace DAOs
         //    }
         //}
 
-        public List<UserDetail> SearchUserByEmail(string searchValue) => _dbContext.UserDetails.Where(m => m.User.Email.Contains(searchValue)).ToList();
+        public List<UserDetail> SearchUserByEmail(string searchValue) 
+        {
+            try
+            {
+                var user = _dbContext.Users.Where(m => m.Email == searchValue).FirstOrDefault();
+                if (user == null) return null;
+                string userId = user.Id;
+                var userDetail = _dbContext.UserDetails.Where(u => u.UserId.Equals(userId)).ToList();
+                return userDetail;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
 
         public async Task<List<UserDetail>> SortUserDetail(string? sortBy, bool isAsc, PageResult pageResult)
         {
@@ -177,5 +191,9 @@ namespace DAOs
             return userDetails;
         }
 
+        public int CountUser()
+        {
+            return _dbContext.Users.Count();
+        }
     }
 }

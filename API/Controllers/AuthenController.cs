@@ -50,8 +50,8 @@ namespace API.Controllers
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            if (ValidatePassword.ValidatePass(model.Password) == false) 
-                return StatusCode(StatusCodes.Status500InternalServerError, new ResponseModel { Status = "Error", Message = "Password format is incorrect."});
+            if (ValidatePassword.ValidatePass(model.Password) == false)
+                return StatusCode(StatusCodes.Status500InternalServerError, new ResponseModel { Status = "Error", Message = "Password format is incorrect." });
             if (model.Email == null || model.Password == null || model.Email == "" || model.Password == "")
                 return StatusCode(StatusCodes.Status500InternalServerError, new ResponseModel { Status = "Error", Message = "Email or password is empty." });
             //var ip = Utils.GetIpAddress(HttpContext);
@@ -86,6 +86,7 @@ namespace API.Controllers
                     else
                     {
                         user.AccessFailedCount++;
+                        _userService.UpdateIdentityUser(user);
                         if (user.AccessFailedCount == 5)
                         {
                             //BanList.BannedUsers.Add(ip);
@@ -153,7 +154,7 @@ namespace API.Controllers
                 UserId = user.Id,
                 Point = 0,
                 FullName = model.FullName,
-                ProfilePicture = $"https://firebasestorage.googleapis.com/v0/b/court-callers.appspot.com/o/user.jpg?alt=media&token=3601d057-9503-4cc8-b203-2eb0b89f900d"
+                ProfilePicture = $"https://firebasestorage.googleapis.com/v0/b/court-callers.appspot.com/o/UserImage%2F2b24782f-6bef-439a-b46a-57feb2bd38f5?alt=media&token=54e5cc04-60ff-40d6-923d-1ccd3953a9b6"
 
             };
             _userDetailService.AddUserDetail(userDetail);
@@ -163,10 +164,10 @@ namespace API.Controllers
 
         [HttpGet]
         [Route("confirm-email")]
-        public async Task<IActionResult> ConfirmEmail (string email, string token)
+        public async Task<IActionResult> ConfirmEmail(string email, string token)
         {
             var user = await _userManager.FindByEmailAsync(email);
-            if (user == null) 
+            if (user == null)
                 return StatusCode(StatusCodes.Status400BadRequest, new ResponseModel { Status = "Error", Message = "Invalid email." });
             var base64 = WebEncoders.Base64UrlDecode(token);
             var decodedToken = Encoding.UTF8.GetString(base64);
@@ -175,7 +176,7 @@ namespace API.Controllers
 
             var result = _userManager.ConfirmEmailAsync(user, decodedToken);
             if (!result.IsCompleted)
-                return StatusCode(StatusCodes.Status400BadRequest, new ResponseModel { Status = "Error", Message = "Email confirmation failed."});
+                return StatusCode(StatusCodes.Status400BadRequest, new ResponseModel { Status = "Error", Message = "Email confirmation failed." });
             await _userManager.AddToRoleAsync(user, "Customer");
             UserDetail userDetail = new UserDetail()
             {
@@ -187,7 +188,7 @@ namespace API.Controllers
             _userDetailService.AddUserDetail(userDetail);
 
             return Ok(new ResponseModel() { Status = "Success", Message = "Email confirmed successfully!" });
-            
+
         }
 
 
@@ -195,6 +196,7 @@ namespace API.Controllers
 
         [HttpPost]
         [Route("register-admin")]
+        
         public async Task<IActionResult> RegisterAdmin([FromBody] RegisterModel model)
         {
             var userExists = await _userManager.FindByEmailAsync(model.Email);
@@ -370,13 +372,13 @@ namespace API.Controllers
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
-                return StatusCode(StatusCodes.Status500InternalServerError, new ResponseModel { Status = "Error", Message = "User does not exist!" });
+                return StatusCode(StatusCodes.Status404NotFound, new ResponseModel { Status = "Error", Message = "User does not exist!" });
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var base64 = Encoding.UTF8.GetBytes(token);
             var encodeToken = WebEncoders.Base64UrlEncode(base64);
             var callbackUrl = Url.Action("ResetPassword", "Authentication", new { token = encodeToken, email = user.Email }, Request.Scheme);
-           
+
             var mailRequest = new MailRequest
             {
                 ToEmail = user.Email,
@@ -421,16 +423,16 @@ namespace API.Controllers
         [Route("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordModel model)
         {
-            
+
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
                 return RedirectToAction("ResetPasswordConfirmation", "Authentication");
             var base64 = WebEncoders.Base64UrlDecode(model.Token);
             var decodedToken = Encoding.UTF8.GetString(base64);
-           
+
             var resetPassResult = await _userManager.ResetPasswordAsync(user, decodedToken, model.Password);
-          
+
 
             if (!resetPassResult.Succeeded)
             {
@@ -438,10 +440,10 @@ namespace API.Controllers
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
-                return BadRequest(new ResponseModel { Status = "Error" , Message = "Something Wrong, Please Try Again" });
+                return BadRequest(new ResponseModel { Status = "Error", Message = "Something Wrong, Please Try Again" });
             }
 
-            return Ok( new ResponseModel{ Status = "Complele" , Message = "Confirmed"});
+            return Ok(new ResponseModel { Status = "Complele", Message = "Confirmed" });
         }
 
     }

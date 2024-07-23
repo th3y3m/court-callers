@@ -66,6 +66,7 @@ namespace Services
             try
             {
                 var json = HttpUtility.ParseQueryString(queryString);
+                var role = json["vnp_OrderInfo"].ToString();
                 var booking = await _bookingRepository.GetBooking((json["vnp_TxnRef"]).ToString());
                 string vnp_ResponseCode = json["vnp_ResponseCode"].ToString();
                 string vnp_SecureHash = json["vnp_SecureHash"].ToString();
@@ -82,7 +83,7 @@ namespace Services
                 }
 
 
-                
+                //này là link đúng
 
                 if (checkSignature && tmnCode == json["vnp_TmnCode"].ToString())
                 {   
@@ -103,23 +104,30 @@ namespace Services
                         _paymentRepository.AddPayment(payment);
 
                         
-                        booking.Status = "complete";
+                        booking.Status = "Complete";
                         await _bookingRepository.SaveChangesAsync();
-
-
-
+                        if (role == "Staff") {
+                            var returnUrl = new PaymentStatusModel
+                            {
+                                IsSuccessful = true,
+                                RedirectUrl = $"https://react-admin-lilac.vercel.app/confirm?vnp_TxnRef={json["vnp_TxnRef"].ToString()}"
+                            }; 
+                            return returnUrl;
+                        } 
                         return new PaymentStatusModel
                         {
                             IsSuccessful = true,
                             RedirectUrl = $"https://localhost:3000/confirm?vnp_TxnRef={json["vnp_TxnRef"].ToString()}"
                         };
+
                     }
                     else
                     {
+                        //link sai
                         var amount = decimal.Parse(json["vnp_Amount"]);
                         if (json["vnp_BankTranNo"]?.ToString() != null || json["vnp_TxnRef"]?.ToString() != null)
                         {
-                            booking.Status = "cancel";
+                            booking.Status = "Canceled";
                             _bookingRepository.UpdateBooking(booking);
 
                         var payment = new Payment
@@ -133,6 +141,15 @@ namespace Services
                             
                         };
                         _paymentRepository.AddPayment(payment);
+                        }
+                        if (role == "Staff")
+                        {
+                            var returnUrl = new PaymentStatusModel
+                            {
+                                IsSuccessful = false,
+                                RedirectUrl = "https://react-admin-lilac.vercel.app/reject?vnp_TxnRef={json[\"vnp_TxnRef\"].ToString()}"
+                            };
+                            return returnUrl;
                         }
                         return new PaymentStatusModel
                         {

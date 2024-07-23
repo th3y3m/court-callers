@@ -43,5 +43,6 @@ namespace Repositories
         public List<UserDetail> SearchUserByEmail(string searchValue) => _userDetailDao.SearchUserByEmail(searchValue);
 
         public async Task<List<UserDetail>> SortUserDetail(string? sortBy, bool isAsc, PageResult pageResult) => await _userDetailDao.SortUserDetail(sortBy, isAsc, pageResult);
+        public int CountUser() => _userDetailDao.CountUser();
     }
 }

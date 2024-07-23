@@ -47,13 +47,54 @@ namespace DAOs
             return (payments, total);
 
         }
+        public async Task<(List<Payment>, int total)> GetPayments(Helper.PageResult pageResult, int? day, int? month, int? year)
+        {
+            if (!day.HasValue && !month.HasValue && !year.HasValue)
+            {
+                var query = _courtCallerDbContext.Payments.AsQueryable();
+                var total = await _courtCallerDbContext.Payments.CountAsync();
+                Pagination pagination = new Pagination(_courtCallerDbContext);
+                List<Payment> payments = await pagination.GetListAsync<Payment>(query, pageResult);
+                return (payments, total);
+            }
+            else if (!day.HasValue && month.HasValue && year.HasValue)
+            {
+                var query = _courtCallerDbContext.Payments.Where(m => m.PaymentDate.Month == month && m.PaymentDate.Year == year).AsQueryable();
+                var total = await _courtCallerDbContext.Payments.Where(m => m.PaymentDate.Month == month && m.PaymentDate.Year == year).CountAsync();
+                Pagination pagination = new Pagination(_courtCallerDbContext);
+                List<Payment> payments = await pagination.GetListAsync(query, pageResult);
+                return (payments, total);
+            }
+            else if (!day.HasValue && !month.HasValue && year.HasValue)
+            {
+                var query = _courtCallerDbContext.Payments.Where(m => m.PaymentDate.Year == year).AsQueryable();
+                var total = await _courtCallerDbContext.Payments.Where(m => m.PaymentDate.Year == year).CountAsync();
+                Pagination pagination = new Pagination(_courtCallerDbContext);
+                List<Payment> payments = await pagination.GetListAsync(query, pageResult);
+                return (payments, total);
+            }
+            else if (day.HasValue && month.HasValue && year.HasValue)
+            {
+                var query = _courtCallerDbContext.Payments.Where(m => m.PaymentDate.Year == year && m.PaymentDate.Month == month && m.PaymentDate.Day == day).AsQueryable();
+                var total = await _courtCallerDbContext.Payments.Where(m => m.PaymentDate.Year == year && m.PaymentDate.Month == month && m.PaymentDate.Day == day).CountAsync();
+                Pagination pagination = new Pagination(_courtCallerDbContext);
+                List<Payment> payments = await pagination.GetListAsync(query, pageResult);
+                return (payments, total);
+            }
+            else
+            {
+                List<Payment> payments = new List<Payment>();
+                return (payments, 0);
+            }
+        }
 
         public List<Payment> GetPayments()
         {
             return _courtCallerDbContext.Payments.ToList();
         }
-        
-        public Payment GetPaymentByBookingId(string bookingId) {
+
+        public Payment GetPaymentByBookingId(string bookingId)
+        {
             return _courtCallerDbContext.Payments.FirstOrDefault(m => m.BookingId.Equals(bookingId));
         }
 
@@ -131,9 +172,9 @@ namespace DAOs
         }
 
         //viết hàm để tính revenue theo ngày
-        public async Task<decimal> GetDailyRevenue (DateTime date)
+        public async Task<decimal> GetDailyRevenue(DateTime date)
         {
-            var startDate = date.Date; 
+            var startDate = date.Date;
             var endDate = startDate.AddDays(1);
 
             var payments = await _courtCallerDbContext.Payments
@@ -143,7 +184,7 @@ namespace DAOs
             return payments;
         }
 
-        public async Task<decimal> GetRevenueByDay (DateTime start, DateTime end)
+        public async Task<decimal> GetRevenueByDay(DateTime start, DateTime end)
         {
             var dayStartParse = start.Date;
             var dayEndParse = end.Date;

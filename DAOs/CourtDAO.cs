@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using DAOs.Helper;
 using DAOs.Models;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Numerics;
+using Microsoft.EntityFrameworkCore;
 
 namespace DAOs
 {
@@ -28,9 +30,10 @@ namespace DAOs
             _courtCallerDbContext = courtCallerDbContext;
         }
 
-       public async Task<List<Court>> GetCourts (Helper.PageResult pageResult, string searchQuery = null)
+       public async Task<(List<Court>,int total)> GetCourts (Helper.PageResult pageResult, string searchQuery = null)
         {
             var query = _courtCallerDbContext.Courts.AsQueryable();
+            int total = await _courtCallerDbContext.Courts.CountAsync();
 
 
             if (!string.IsNullOrEmpty(searchQuery))
@@ -44,7 +47,7 @@ namespace DAOs
 
             Pagination pagination = new Pagination(_courtCallerDbContext);
             List<Court> courts = await pagination.GetListAsync<Court>(query, pageResult);
-            return courts;
+            return (courts, total);
 
         }
 
@@ -99,10 +102,10 @@ namespace DAOs
             }
         }
 
-        public async Task<List<Court>> GetCourtsByBranchId(string branchId, Helper.PageResult pageResult, string searchQuery = null)
+        public async Task<(List<Court>,int total)> GetCourtsByBranchId(string branchId, Helper.PageResult pageResult, string searchQuery = null)
         {
             var query = _courtCallerDbContext.Courts.Where(m => m.BranchId.Equals(branchId)).AsQueryable();
-
+            var total = await _courtCallerDbContext.Courts.Where(m => m.BranchId.Equals(branchId)).CountAsync();
 
             if (!string.IsNullOrEmpty(searchQuery))
             {
@@ -115,7 +118,7 @@ namespace DAOs
 
             Pagination pagination = new Pagination(_courtCallerDbContext);
             List<Court> courts = await pagination.GetListAsync<Court>(query, pageResult);
-            return courts;
+            return (courts, total);
         }
 
 

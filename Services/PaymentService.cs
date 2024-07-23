@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using DAOs.Helper;
 using Microsoft.AspNetCore.Http.HttpResults;
 using MimeKit.Cryptography;
+using DAOs;
 
 namespace Services
 {
@@ -55,7 +56,7 @@ namespace Services
 
         public List<Payment> SearchByDate(DateTime start, DateTime end) => _paymentRepository.SearchByDate(start, end);
 
-        public async Task<string> ProcessBookingPayment(string bookingId)
+        public async Task<string> ProcessBookingPayment(string role ,string bookingId)
         {
             var bookings = await _bookingRepository.GetBooking(bookingId);
             if (bookings == null)
@@ -63,7 +64,7 @@ namespace Services
                 return null;
             }
 
-            var paymentURL = _vnpayService.CreatePaymentUrl(bookings.TotalPrice,"ok",bookings.BookingId);
+            var paymentURL = _vnpayService.CreatePaymentUrl(bookings.TotalPrice,role,bookings.BookingId);
 
 
             return paymentURL;
@@ -127,5 +128,8 @@ namespace Services
         public async Task<decimal> GetDailyRevenue(DateTime date) => await _paymentRepository.GetDailyRevenue(date);
 
         public async Task<decimal> GetRevenueByDay(DateTime start, DateTime end) => await _paymentRepository.GetRevenueByDay(start, end);
+
+        public async Task<(List<Payment>, int total)> GetPayments(PageResult pageResult, int? day, int? month, int? year) => await _paymentRepository.GetPayments(pageResult, day, month, year);
+
     }
 }

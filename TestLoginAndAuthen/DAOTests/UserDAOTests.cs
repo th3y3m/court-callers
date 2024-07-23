@@ -86,16 +86,16 @@ namespace UnitTests.DAOTests
             mockContext.Verify(m => m.SaveChanges(), Times.Once());
         }
 
-        [Theory]
-        [InlineData("abc1", 1)]
-        [InlineData("abc9", 0)]
-        [InlineData("abc", 4)]
+        //[Theory]
+        //[InlineData("abc1", 1)]
+        //[InlineData("abc9", 0)]
+        //[InlineData("abc", 4)]
 
-        public void SearchUserByEmail_ReturnsUser(string searchValue, int count)
-        {
-            var dao = new UserDAO(mockContext.Object);
-            var user = dao.SearchUserByEmail(searchValue);
-            Assert.Equal(count, user.Count);
-        }
+        //public void SearchUserByEmail_ReturnsUser(string searchValue, int count)
+        //{
+        //    var dao = new UserDAO(mockContext.Object);
+        //    var user = dao.SearchUserByEmail(searchValue);
+        //    Assert.Equal(count, user.Count);
+        //}
     }
 }

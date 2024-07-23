@@ -47,5 +47,7 @@ namespace Repositories
         public async Task<decimal> GetDailyRevenue(DateTime date) => await _paymentDao.GetDailyRevenue(date);
 
         public async Task<decimal> GetRevenueByDay(DateTime start, DateTime end) => await _paymentDao.GetRevenueByDay(start, end);
+
+        public async Task<(List<Payment>, int total)> GetPayments(PageResult pageResult, int? day, int? month, int? year) => await _paymentDao.GetPayments(pageResult, day, month, year);
     }
 }

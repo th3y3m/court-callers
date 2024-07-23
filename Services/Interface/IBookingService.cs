@@ -22,12 +22,25 @@ namespace Services.Interface
         Booking ReserveSlotAsyncV2(SlotModel[] slotModels, string userId);
         Task<Booking> AddBookingTypeFix(int numberOfMonths, string[] dayOfWeek, DateOnly startDate, TimeSlotModel[] timeSlotModel, string userId, string branchId);
         Task DeleteBookingAndSetTimeSlotAsync(string bookingId);
-        void CancelBooking(string bookingId);
+        Task CancelBooking(string bookingId);
         Task<List<Booking>> SortBookings(string? sortBy, bool isAsc, PageResult pageResult);
         (string, int) NumberOfSlotsAvailable(string userId, string branchId);
-        Task<(IEnumerable<BookingResponse>, int count)> GetDailyBookings();
-        Task<(IEnumerable<WeeklyBookingResponse>, decimal)> GetWeeklyBookingsAsync();
+        Task<(int todayCount, double changePercentage)> GetDailyBookings(string? branchId);
+        Task<(int weeklyCount, double changePercentage)> GetWeeklyBookingsAsync(string? branchId);
+        Task<(int weeklyCount, double changePercentage)> GetMonthlyBookingsAsync(string? branchId);
 
+        Task<int[]> GetBookingsFromStartOfWeek(string? branchId);
+        Task<int[]> GetWeeklyBookingsFromStartOfMonth(string? branchId);
+        Task<int[]> GetMonthlyBookingsFromStartOfYear(string? branchId);
+
+        Task<(decimal todayRevenue, decimal changePercentage)> GetDailyRevenue(string? branchId);
+        Task<(decimal todayRevenue, decimal changePercentage)> GetMonthlyRevenueAsync(string? branchId);
+        Task<(decimal todayRevenue, decimal changePercentage)> GetWeeklyRevenueAsync(string? branchId);
+        Task<decimal[]> GetRevenueFromStartOfWeek(string? branchId);
+
+        Task<decimal[]> GetWeeklyRevenueFromStartOfMonth(string? branchId);
+
+        Task<decimal[]> GetMonthlyRevenueFromStartOfYear(string? branchId);
 
     }
 }

@@ -18,14 +18,15 @@ namespace Services
                 _userRepository = new UserRepository();
 			}
 		}
+        public void UpdateIdentityUser(IdentityUser IdentityUser) => _userRepository.UpdateIdentityUser(IdentityUser);
 
-		public IdentityUser AddUser(IdentityUser User) => _userRepository.AddUser(User);
+        public IdentityUser AddUser(IdentityUser User) => _userRepository.AddUser(User);
 		//public void DeleteUser(string id) => UserRepository.DeleteUser(id);
 		public IdentityUser GetUser(string id) => _userRepository.GetUser(id);
 		//public List<IdentityUser> GetUsers() => UserRepository.GetUsers();
-        //public IdentityUser UpdateUser(string id, IdentityUser User) => UserRepository.UpdateUser(id, User);
+		//public IdentityUser UpdateUser(string id, IdentityUser User) => UserRepository.UpdateUser(id, User);
 
-        public async Task<(List<IdentityUser>, int total)> GetUsers(DAOs.Helper.PageResult page, string searchQuery = null) => await _userRepository.GetUsers(page,searchQuery);
+		public async Task<(List<IdentityUser>, int total)> GetUsers(DAOs.Helper.PageResult page, string searchQuery = null) => await _userRepository.GetUsers(page,searchQuery);
 
 
         public void BanUser(string id) => _userRepository.BanUser(id);
