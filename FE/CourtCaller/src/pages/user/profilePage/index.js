@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import "./style.scss";
 import "./editStyle.scss";
-import axios from "axios";
+import api from "api/api";
 import { jwtDecode } from "jwt-decode";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -74,27 +74,18 @@ const Profile = () => {
       const decoded = jwtDecode(token);
       setUserName(decoded.name);
       setUserPic(decoded.picture);
-      setUserEmail(decoded.email);
 
       const fetchUserData = async (id, isGoogle) => {
         try {
           if (isGoogle) {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/GetUserDetailByUserEmail/${id}`
-            );
+            const response = await api.get(`/UserDetails/GetUserDetailByUserEmail/${id}`);
             setUserData(response.data);
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/GetUserDetailByUserEmail/${id}?searchValue=${id}`
-            );
+            const userResponse = await api.get(`/Users/GetUserDetailByUserEmail/${id}?searchValue=${id}`);
             setUser(userResponse.data);
           } else {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/${id}`
-            );
+            const response = await api.get(`/UserDetails/${id}`);
             setUserData(response.data);
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/${id}`
-            );
+            const userResponse = await api.get(`/Users/${id}`);
             setUser(userResponse.data);
           }
         } catch (error) {
@@ -113,7 +104,6 @@ const Profile = () => {
       }
     }
   }, []);
-  console.log("user", user);
 
   useEffect(() => {
     if (user && userData) {
@@ -222,8 +212,8 @@ const Profile = () => {
         formData.append("profilePicture", imageUrl);
       }
 
-      const response = await axios.put(
-        `https://courtcaller.azurewebsites.net/api/UserDetails/foruser/${userId}`,
+      const response = await api.put(
+        `/UserDetails/foruser/${userId}`,
         formData,
         {
           headers: {
@@ -280,7 +270,7 @@ const Profile = () => {
               <p className="info">{user.userName}</p>
             </div>
             <div className="form-group">
-              <p className="info-field">Date of Birth</p>
+              <p className="info-field">Year of Birth</p>
               <p className="info">{userData.yearOfBirth}</p>
             </div>
             <div className="form-group">

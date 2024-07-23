@@ -1,11 +1,11 @@
-import axios from 'axios';
+import api from "./api";
 
 const url = 'https://courtcaller.azurewebsites.net/api';
 
 export const fetchBranches = async (pageNumber = 1, pageSize = 10, searchQuery = '') => {
   try {
     const params = { pageNumber, pageSize, searchQuery };
-    const response = await axios.get(`${url}/Branches`, { params });
+    const response = await api.get(`${url}/Branches`, { params });
 
     if (response.data && Array.isArray(response.data.data)) {
       const items = response.data.data;
@@ -22,7 +22,7 @@ export const fetchBranches = async (pageNumber = 1, pageSize = 10, searchQuery =
 
 export const createBranch = async (branchData) => {
   try {
-    const response = await axios.post(`${url}/Branches`, branchData);
+    const response = await api.post(`${url}/Branches`, branchData);
     return response.data;
   } catch (error) {
     console.error('Error creating branch:', error.response ? error.response.data : error.message);
@@ -32,7 +32,7 @@ export const createBranch = async (branchData) => {
 
 export const fetchBranchById = async (branchId) => {
   try {
-    const response = await axios.get(`${url}/Branches/${branchId}`);
+    const response = await api.get(`${url}/Branches/${branchId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching branch data:', error.response ? error.response.data : error.message);
@@ -42,7 +42,7 @@ export const fetchBranchById = async (branchId) => {
 
 export const updateBranch = async (branchId, branchData) => {
   try {
-    const response = await axios.put(`${url}/Branches/${branchId}`, branchData);
+    const response = await api.put(`${url}/Branches/${branchId}`, branchData);
     return response.data;
   } catch (error) {
     console.error('Error updating branch:', error.response ? error.response.data : error.message);

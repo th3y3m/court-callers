@@ -24,7 +24,6 @@ const Footer = () => {
                             <h1>About us</h1>
                             <ul>
                                 <li>Home Page</li>
-                                <li>Schedule Booking</li>
                                 <li>News</li>
                             </ul>
 
@@ -43,7 +42,7 @@ const Footer = () => {
                                     <AiOutlinePhone />
                                 </div>
                                 <div className="select_bar_phone_text">
-                                    <p>123.465.463</p>
+                                    <p>123.465.4639</p>
                                     <span>Support 24/7</span>
                                 </div>
                             </div>

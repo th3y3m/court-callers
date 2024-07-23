@@ -1,10 +1,10 @@
-import axios from 'axios';
+import api from "./api";
 
 
 const url = 'https://courtcaller.azurewebsites.net/api';
 export const fetchPrice = async (isVip,branchId) => {
   try {
-    const response = await axios.post(`${url}/Prices/showprice`, null, {
+    const response = await api.post(`${url}/Prices/showprice`, null, {
       params: {
         isVip,
         branchId
@@ -23,7 +23,7 @@ export const fetchPrice = async (isVip,branchId) => {
 
 export const fetchPriceByBranchID = async (branchId) => {
   try {
-    const response = await axios.get(`${url}/Prices/branchId/${branchId}`);
+    const response = await api.get(`${url}/Prices/branchId/${branchId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching prices:', error);
@@ -34,7 +34,7 @@ export const fetchPriceByBranchID = async (branchId) => {
 // New method to fetch price by branchId, type, and isWeekend
 export const fetchPriceByBranchIDType = async (branchId, type, isWeekend) => {
   try {
-    const response = await axios.get(`${url}/Prices/branchId/${branchId}/type/${type}`, {
+    const response = await api.get(`${url}/Prices/branchId/${branchId}/type/${type}`, {
       params: {
         isWeekend
       }

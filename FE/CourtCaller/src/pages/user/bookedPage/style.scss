@@ -184,6 +184,19 @@ td {
   border-radius: 10px;
   box-shadow: inset 2px 2px 2px 0px rgba(255, 255, 255, 0.5),
     7px 7px 20px 0px rgba(0, 0, 0, 0.2), 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
+  
+  .reschedule-prompt{
+    margin-top: 50px;
+
+    p{
+      color: red;
+      font-style: italic;
+
+      strong{
+        font-style: normal;
+      }
+    }
+  }
 }
 
 .branch-view {

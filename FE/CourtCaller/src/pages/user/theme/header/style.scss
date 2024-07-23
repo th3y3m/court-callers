@@ -1,108 +1,105 @@
 @use "sass:map";
 @import "style/pages/theme";
 
-
 $bannerImg: "/assets/users/images/hero/banner.jpg";
 
+.container {
+  .header_logo {
+    padding: 15px 0;
+  }
 
-.container{
-    .header_logo {
-        padding: 15px 0;
-    }
-    
-    .header_menu {
-        padding: 24px 0;
-    
-        ul {
-            display: flex;
-            justify-content: space-evenly;
-    
-            li {
-                list-style: none;
-                position: relative;
-    
-                a {
-                    text-decoration: none;
-                    font-size: 14px;
-                    color: map.get($theme-colors, "bold-text");
-                    text-transform: uppercase;
-                    font-weight: bold;
-                    letter-spacing: 2px;
-                    transition: all 0.3s;
-                    padding: 5px 0;
-                    display: block;
-                }
-                a:hover{
-                    color: #008874;
-                }
-            }
-    
-            li:hover .header_menu_dropdown {
-                opacity: 1;
-                visibility: visible;
-            }
-    
-            .active a {
-                color: map.get($theme-colors, "main");
-            }
-    
-            .header_menu_dropdown {
-                background: #222222;
-                display: block;
-                position: absolute;
-                width: 180px;
-                z-index: 9;
-                padding: 5px 0;
-                transition: all, 0.3s;
-                opacity: 0;
-                visibility: hidden;
-    
-                li {
-                    a {
-                        text-transform: capitalize;
-                        color: #ffffff;
-                        font-weight: 400;
-                        padding: 5px 15px;
-                    }
-    
-                    :hover {
-                        color: map.get($theme-colors, "main");
-                    }
-                }
-            }
+  .header_menu {
+    padding: 24px 0;
+
+    ul {
+      display: flex;
+      justify-content: space-evenly;
+
+      li {
+        list-style: none;
+        position: relative;
+
+        a {
+          text-decoration: none;
+          font-size: 14px;
+          color: map.get($theme-colors, "bold-text");
+          text-transform: uppercase;
+          font-weight: bold;
+          letter-spacing: 2px;
+          transition: all 0.3s;
+          padding: 5px 0;
+          display: block;
         }
+
+        a:hover {
+          color: #008874;
+        }
+
+        &.active a {
+          color: #008874;
+        }
+      }
+
+      li:hover .header_menu_dropdown {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .header_menu_dropdown {
+        background: #222222;
+        display: block;
+        position: absolute;
+        width: 180px;
+        z-index: 9;
+        padding: 5px 0;
+        transition: all, 0.3s;
+        opacity: 0;
+        visibility: hidden;
+
+        li {
+          a {
+            text-transform: capitalize;
+            color: #ffffff;
+            font-weight: 400;
+            padding: 5px 15px;
+          }
+
+          :hover {
+            color: map.get($theme-colors, "main");
+          }
+        }
+      }
     }
-    
-    .header_login {
+  }
+
+  .header_login {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    padding: 24px 0;
+
+    ul {
+      display: flex;
+      column-gap: 5px;
+      list-style: none;
+
+      li {
         display: flex;
-        justify-content: end; // can giua
-        align-items: center; //vi tri tren duoi
-        padding: 24px 0;
-    
-        ul {
-            display: flex;
-            column-gap: 5px;
-            list-style: none;
-    
-            li {
-                display: flex;
-                align-items: center;
-    
-                    a, span {
-                        text-decoration: none;
-                        font-size: 20px;
-                        margin-left: 10px;
-                        cursor: pointer;
-                    }
-    
-                    a {
-                        display: inline-block;
-                        color: map.get($theme-colors, "normal-text");
-                    }
-            }
+        align-items: center;
+
+        a,
+        span {
+          text-decoration: none;
+          font-size: 20px;
+          margin-left: 10px;
+          cursor: pointer;
         }
-        
+
+        a {
+          display: inline-block;
+          color: map.get($theme-colors, "normal-text");
+        }
+      }
     }
+  }
 }
-
-

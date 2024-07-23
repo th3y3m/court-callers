@@ -20,6 +20,13 @@ export const fixMonthValidation = (months) => {
     return { isValid: true, message: '' };
 };
 
+export const fixDayOfWeekValidation = (day) => {
+    if (day.length == 0) {
+        return {isValid: false, message: 'You need to choose day of week'};
+    }
+    return  {isValid: true, message: '' };
+}
+
 export const fixStartTimeValidation = (startTime) => {
     const timeFormat = /^\d{2}:00:00$/;
 

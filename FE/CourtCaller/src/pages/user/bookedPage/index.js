@@ -1,12 +1,11 @@
 import { memo, useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
-import axios from "axios";
 import { FaRegCalendarCheck } from "react-icons/fa";
 import { GiShuttlecock } from "react-icons/gi";
 import { fetchQrcode } from "api/bookingApi";
 import BeatLoader from "react-spinners/BeatLoader";
 import "./style.scss";
-
+import api from "api/api";
 
 const BookedPage = () => {
   const [bookings, setBookings] = useState([]);
@@ -26,29 +25,21 @@ const BookedPage = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+
     if (token) {
-      const decodedToken = jwtDecode(token);
-      setUserId(decodedToken.Id);
+      const decoded = jwtDecode(token);
 
       const fetchUserData = async (id, isGoogle) => {
         try {
           if (isGoogle) {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/GetUserDetailByUserEmail/${id}`
-            );
+            const response = await api.get(`/UserDetails/GetUserDetailByUserEmail/${id}`);
             setUserData(response.data);
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/GetUserDetailByUserEmail/${id}?searchValue=${id}`
-            );
+            const userResponse = await api.get(`/Users/GetUserDetailByUserEmail/${id}?searchValue=${id}`);
             setUser(userResponse.data);
           } else {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/${id}`
-            );
+            const response = await api.get(`/UserDetails/${id}`);
             setUserData(response.data);
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/${id}`
-            );
+            const userResponse = await api.get(`/Users/${id}`);
             setUser(userResponse.data);
           }
         } catch (error) {
@@ -56,12 +47,12 @@ const BookedPage = () => {
         }
       };
 
-      if (decodedToken.iss !== "https://accounts.google.com") {
-        const userId = decodedToken.Id;
+      if (decoded.iss !== "https://accounts.google.com") {
+        const userId = decoded.Id;
         setUserId(userId);
         fetchUserData(userId, false);
       } else {
-        const userId = decodedToken.email;
+        const userId = decoded.email;
         setUserId(userId);
         fetchUserData(userId, true);
       }
@@ -73,16 +64,16 @@ const BookedPage = () => {
       if (!userData || !userData.userId) return;
 
       try {
-        const bookingsResponse = await axios.get(
-          `https://courtcaller.azurewebsites.net/api/Bookings/userId/${userData.userId}`
+        const bookingsResponse = await api.get(
+          `/Bookings/userId/${userData.userId}`
         );
         const allBookings = bookingsResponse.data;
 
         const filteredBookings = await Promise.all(
           allBookings.map(async (booking) => {
             try {
-              const paymentResponse = await axios.get(
-                `https://courtcaller.azurewebsites.net/api/Payments/bookingid/${booking.bookingId}`
+              const paymentResponse = await api.get(
+                `/Payments/bookingid/${booking.bookingId}`
               );
               if (paymentResponse.data.paymentMessage === "Complete")
                 return booking;
@@ -100,15 +91,15 @@ const BookedPage = () => {
           (booking) => booking !== null
         );
 
-        const currentDate = new Date();
+        const currentDate = new Date().getDate();
         const scheduledBookings = [];
         const overdueBookingsList = [];
         const canceledBookingsList = [];
 
         await Promise.all(
           validBookings.map(async (booking) => {
-            const slotResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/TimeSlots/bookingId/${booking.bookingId}`
+            const slotResponse = await api.get(
+              `/TimeSlots/bookingId/${booking.bookingId}`
             );
             const slots = slotResponse.data;
 
@@ -151,8 +142,8 @@ const BookedPage = () => {
 
   const handleCancelBooking = async () => {
     try {
-      await axios.delete(
-        `https://courtcaller.azurewebsites.net/api/Bookings/cancelBooking/${bookingIdToCancel}`
+      await api.delete(
+        `/Bookings/cancel/${bookingIdToCancel}`
       );
       setBookings((prevBookings) =>
         prevBookings.map((booking) =>
@@ -173,8 +164,8 @@ const BookedPage = () => {
 
     try {
       setQrcode(await fetchQrcode(booking.bookingId));
-      const slotResponse = await axios.get(
-        `https://courtcaller.azurewebsites.net/api/TimeSlots/bookingId/${booking.bookingId}`
+      const slotResponse = await api.get(
+        `/TimeSlots/bookingId/${booking.bookingId}`
       );
       console.log("Slot Response:", slotResponse.data);
       setSlotInfo(
@@ -189,8 +180,8 @@ const BookedPage = () => {
         })
       );
 
-      const branchResponse = await axios.get(
-        `https://courtcaller.azurewebsites.net/api/Branches/${booking.branchId}`
+      const branchResponse = await api.get(
+        `/Branches/${booking.branchId}`
       );
       console.log("Branch Response:", branchResponse.data);
       setBranchInfo(branchResponse.data);
@@ -282,7 +273,7 @@ const BookedPage = () => {
                         <td>{formatDate(booked.bookingDate)}</td>
                         <td>{booked.numberOfSlot}</td>
                         <td>{booked.bookingType}</td>
-                        <td>{booked.totalPrice} VND</td>
+                        <td>{booked.totalPrice}K VND</td>
                         <td>{booked.status}</td>
                         <td>
                           {booked.status !== "Canceled" && (
@@ -525,6 +516,11 @@ const BookedPage = () => {
                 </div>
                 <p style={{ marginTop: "6px" }}>QR Code for Checking In</p>
                 <p style={{ margin: "10px 0", color: "#00c853" }}>Checked in</p>
+              </div>
+              <div className="reschedule-prompt">
+                <p>
+                  *If you want to reschedule, please contact to our staffs via <strong> courtcaller@gmail.com</strong> or via hotline <strong> 0332748325</strong>.
+                </p>
               </div>
             </div>
           </div>

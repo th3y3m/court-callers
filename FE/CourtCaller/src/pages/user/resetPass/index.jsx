@@ -35,7 +35,7 @@ const ResetPassword = () => {
     e.preventDefault();
 
     const passwordValidation = validatePassword(password);
-    const confirmPasswordValidation = validateConfirmPassword(confirmPassword);
+    const confirmPasswordValidation = validateConfirmPassword(password,confirmPassword);
 
     setPasswordValidation(passwordValidation);
     setConfirmPasswordValidation(confirmPasswordValidation);

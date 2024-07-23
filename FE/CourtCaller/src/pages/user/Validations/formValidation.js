@@ -1,5 +1,5 @@
 const API_URL =
-  "https://courtcaller.azurewebsites.net/api/Users?pageNumber=1&pageSize=100";
+  "https://courtcaller.azurewebsites.net/api/UserDetails/GetUserDetailByUserEmail/";
 
 export const validateFullName = (fullName) => {
   if (fullName.length >= 6) return { isValid: true, message: "" };
@@ -41,8 +41,12 @@ export const validateAddress = (address) => {
 
 export const validateYob = (yob) => {
   const currentYear = new Date().getFullYear();
+  const yobRegex = /^\d{4}$/;
+  if (!yobRegex.test(yob)) {
+    return { isValid: false, message: "Yob must be a number with 4 digits" };
+  }
 
-  if (yob > currentYear) {
+  if (yob > currentYear - 1) {
     return {
       isValid: false,
       message: "Year of birth must be less than current year!",
@@ -65,16 +69,13 @@ export const validateEmail = async (email) => {
 
   // Fetch registered emails from the API
   try {
-    const response = await fetch(API_URL);
-    if (!response.ok) {
-      throw new Error("Failed to fetch registered emails");
-    }
+    const response = await fetch(`${API_URL}/${email}`);
 
-    const users = await response.json();
-    const registeredEmails = users.data.map((user) => user.email.toLowerCase());
-
-    if (registeredEmails.includes(email.toLowerCase())) {
-      return { isValid: false, message: "Email is already existed" };
+    if (response.status === 200) {
+      return {
+        isValid: false,
+        message: "Email is already existed",
+      };
     }
 
     return { isValid: true, message: "" };
@@ -120,15 +121,4 @@ export const validateTime = (time) => {
   const timeRegex = /^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/;
   if (timeRegex.test(time)) return { isValid: true, message: "" };
   return { isValid: false, message: "Invalid time format! (hh:mm:ss)" };
-};
-
-export const validateRequired = (value) => {
-  if (value.trim() !== "") return { isValid: true, message: "" };
-  return { isValid: false, message: "This field is required" };
-};
-
-export const validateNumber = (value) => {
-  if (!isNaN(value) && value.trim() !== "")
-    return { isValid: true, message: "" };
-  return { isValid: false, message: "Must be a number" };
 };

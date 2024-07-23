@@ -278,14 +278,14 @@ const Login = () => {
                     toast.error("Google login failed");
                   }}
                 />
-                <a
+                {/* <a
                   onClick={loginFacebook}
                   className="icon"
                   style={{ color: "white" }}
                 >
                   <FaFacebookF />{" "}
                   <span style={{ marginLeft: 5 }}> With Facebook</span>
-                </a>
+                </a> */}
               </div>
               <span>or use your account for login</span>
               <input
@@ -315,7 +315,7 @@ const Login = () => {
                 {loading ? <ClipLoader size={15} color="#fff" /> : "Sign In"}
               </button>
               {message && (
-                <p className={messageType === "error" ? "error-message" : ""}>
+                <p style={{marginTop: 10, fontSize: "small"}} className={messageType === "error" ? "error-message" : ""}>
                   {message}
                 </p>
               )}
@@ -376,7 +376,7 @@ const Login = () => {
                 {loading ? <ClipLoader size={15} color="#fff" /> : "Sign Up"}
               </button>
               {message && (
-                <p className={messageType === "error" ? "error-message" : ""}>
+                <p style={{marginTop: 10}} className={messageType === "error" ? "error-message" : ""}>
                   {message}
                 </p>
               )}

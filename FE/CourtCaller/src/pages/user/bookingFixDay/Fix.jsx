@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
+import Modal from "react-modal";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import {
   Box,
@@ -16,6 +16,7 @@ import {
   Paper,
   ThemeProvider,
   createTheme,
+  MenuItem  ,
 } from "@mui/material";
 import { MdOutlineLocalDrink } from "react-icons/md";
 import pic1 from "assets/users/images/byday/pic1.webp";
@@ -29,10 +30,27 @@ import { CiEdit } from "react-icons/ci";
 import CalendarView from "./CalendarView";
 import { fetchPriceByBranchIDType } from "api/priceApi";
 import { fetchBookingByUserId } from "api/bookingApi";
+import api from "api/api";
+import {
+  fetchPercentRatingByBranch,
+  fetchEachPercentRatingByBranch,
+} from "api/reviewApi";
 import DisplayMap from "map/DisplayMap";
 import RequestLogin from "../requestUserLogin";
 import RequestBooking from "../requestUserBooking";
-import { fixMonthValidation, fixStartTimeValidation, fixEndTimeValidation } from "../Validations/bookingValidation";
+import {
+  fixMonthValidation,
+  fixStartTimeValidation,
+  fixEndTimeValidation,
+  fixDayOfWeekValidation
+} from "../Validations/bookingValidation";
+import {
+  reviewTextValidation,
+  valueValidation,
+} from "../Validations/reviewValidation";
+import RequestForReviewing from "../requestForReviewing";
+
+Modal.setAppElement("#root");
 
 const theme = createTheme({
   palette: {
@@ -73,27 +91,30 @@ const getOccurrencesOfDayInMonth = (year, month, day) => {
   return count;
 };
 
+const getOccurrencesOfDayInPeriod = (startDate, totalDays, day) => {
+  let count = 0;
+  for (let i = 0; i < totalDays; i++) {
+    const currentDay = new Date(startDate);
+    currentDay.setDate(startDate.getDate() + i);
+    const dayOfWeek = currentDay.toLocaleDateString('en-US', { weekday: 'long' });
+    if (dayOfWeek === day) {
+      count++;
+    }
+  }
+  return count;
+};
+
 const getTotalDaysForWeekdays = (daysOfWeek, numberOfMonths, startDate) => {
   const totalDays = {};
-  const startMonth = startDate.getMonth() + 1;
-  const startYear = startDate.getFullYear();
+  const daysInPeriod = numberOfMonths * 30;  // Tính tổng số ngày
 
-  daysOfWeek.forEach((day) => (totalDays[day] = 0));
-
-  for (let i = 0; i < numberOfMonths; i++) {
-    const currentMonth = ((startMonth + i - 1) % 12) + 1;
-    const currentYear = startYear + Math.floor((startMonth + i - 1) / 12);
-    daysOfWeek.forEach((day) => {
-      totalDays[day] += getOccurrencesOfDayInMonth(
-        currentYear,
-        currentMonth,
-        day
-      );
-    });
-  }
+  //array.forEach(function(currentValue, index, arr), thisValue)
+  daysOfWeek.forEach(day => {
+    totalDays[day] = getOccurrencesOfDayInPeriod(startDate, daysInPeriod, day);
+  });
 
   return totalDays;
-};
+}; 
 
 const FixedBooking = () => {
   const [numberOfMonths, setNumberOfMonths] = useState("");
@@ -104,7 +125,7 @@ const FixedBooking = () => {
   const [slotStartTime, setSlotStartTime] = useState("");
   const [slotEndTime, setSlotEndTime] = useState("");
   const [fixedPrice, setFixedPrice] = useState(0);
-  const [numberOfCourt, setNumberOfCourts] = useState('');
+  const [numberOfCourt, setNumberOfCourts] = useState("");
   const [email, setEmail] = useState("");
   const [userData, setUserData] = useState(null);
   const [user, setUser] = useState(null);
@@ -122,44 +143,43 @@ const FixedBooking = () => {
   const [selectedBranch, setSelectedBranch] = useState(branch.branchId);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
+  const [AverageRating, setAverageRating] = useState(null);
+  const [listRating, setListRating] = useState([]);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
   const [monthValidation, setMonthValidation] = useState({
     isValid: true,
-    message: ""
+    message: "",
   });
   const [startTimeValidation, setStartTimeValidation] = useState({
     isValid: true,
-    message: ""
+    message: "",
   });
   const [endTimeValidation, setEndTimeValidation] = useState({
     isValid: true,
-    message: ""
+    message: "",
+  });
+  const [dayOfWeekValidation, setDayOfWeekValidation] = useState({
+    isValid: true,
+    message: "",
   });
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+
     if (token) {
-      const decodedToken = jwtDecode(token);
-      setUserId(decodedToken.Id);
+      const decoded = jwtDecode(token);
 
       const fetchUserData = async (id, isGoogle) => {
         try {
           if (isGoogle) {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/GetUserDetailByUserEmail/${id}`
-            );
+            const response = await api.get(`/UserDetails/GetUserDetailByUserEmail/${id}`);
             setUserData(response.data);
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/GetUserDetailByUserEmail/${id}?searchValue=${id}`
-            );
+            const userResponse = await api.get(`/Users/GetUserDetailByUserEmail/${id}?searchValue=${id}`);
             setUser(userResponse.data);
           } else {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/${id}`
-            );
+            const response = await api.get(`/UserDetails/${id}`);
             setUserData(response.data);
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/${id}`
-            );
+            const userResponse = await api.get(`/Users/${id}`);
             setUser(userResponse.data);
           }
         } catch (error) {
@@ -167,12 +187,12 @@ const FixedBooking = () => {
         }
       };
 
-      if (decodedToken.iss !== "https://accounts.google.com") {
-        const userId = decodedToken.Id;
+      if (decoded.iss !== "https://accounts.google.com") {
+        const userId = decoded.Id;
         setUserId(userId);
         fetchUserData(userId, false);
       } else {
-        const userId = decodedToken.email;
+        const userId = decoded.email;
         setUserId(userId);
         fetchUserData(userId, true);
       }
@@ -188,8 +208,8 @@ const FixedBooking = () => {
   };
 
   const handleSubmitReview = async () => {
-    const token = localStorage.getItem('token');
-    if(!token){
+    const token = localStorage.getItem("token");
+    if (!token) {
       setShowLogin(true);
       return;
     }
@@ -200,14 +220,23 @@ const FixedBooking = () => {
     }
 
     const checkBooking = await fetchBookingByUserId(userData.userId);
-    const listBranchId = checkBooking.map((booking) => booking.branchId);
-    if(!listBranchId.includes(selectedBranch)){
+
+    if (checkBooking.length == 0) {
       setShowRequestBooking(true);
       return;
     }
 
-    if(checkBooking.length == 0){
+    const listBranchId = checkBooking.map((booking) => booking.branchId);
+    if (!listBranchId.includes(selectedBranch)) {
       setShowRequestBooking(true);
+      return;
+    }
+
+    const starValidation = valueValidation(highlightedStars);
+    const remarkValidation = reviewTextValidation(reviewText);
+
+    if (!starValidation.isValid || !remarkValidation.isValid) {
+      setModalIsOpen(true);
       return;
     }
 
@@ -224,8 +253,8 @@ const FixedBooking = () => {
       };
 
       try {
-        await axios.post(
-          "https://courtcaller.azurewebsites.net/api/Reviews",
+        await api.post(
+          "/Reviews",
           reviewData
         );
         setReviewFormVisible(false);
@@ -239,10 +268,14 @@ const FixedBooking = () => {
     }
   };
 
+  const closeModal = () => {
+    setModalIsOpen(false);
+  };
+
   const handleViewReviews = async () => {
     try {
-      const response = await axios.get(
-        `https://courtcaller.azurewebsites.net/api/Reviews/GetReviewsByBranch/${selectedBranch}`,
+      const response = await api.get(
+        `/Reviews/GetReviewsByBranch/${selectedBranch}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -251,13 +284,13 @@ const FixedBooking = () => {
       );
 
       const reviewsWithDetails = await Promise.all(
-        response.data.data.map(async (review) => {
+        response.data.map(async (review) => {
           console.log("review", review.id);
           let userFullName = "Unknown User";
           if (review.id) {
             try {
-              const userDetailsResponse = await axios.get(
-                `https://courtcaller.azurewebsites.net/api/UserDetails/${review.id}`,
+              const userDetailsResponse = await api.get(
+                `/UserDetails/${review.id}`,
                 {
                   headers: {
                     "Content-Type": "application/json",
@@ -305,8 +338,8 @@ const FixedBooking = () => {
 
       console.log("editingReview", editingReview);
 
-      const response = await axios.put(
-        `https://courtcaller.azurewebsites.net/api/Reviews/${editingReview.reviewId}`,
+      const response = await api.put(
+        `/Reviews/${editingReview.reviewId}`,
         updatedReviewData,
         {
           headers: {
@@ -348,16 +381,20 @@ const FixedBooking = () => {
 
   useEffect(() => {
     const fetchNumberOfCourts = async () => {
-        try {
-          const response = await fetch(`https://courtcaller.azurewebsites.net/numberOfCourt/${selectedBranch}`);
-          const data = await response.json();
-          setNumberOfCourts(data);
-        } catch (err) {
-          console.error(`Failed to fetch number of courts for branch ${selectedBranch}`);
-        }
+      try {
+        const response = await fetch(
+          `https://courtcaller.azurewebsites.net/numberOfCourt/${selectedBranch}`
+        );
+        const data = await response.json();
+        setNumberOfCourts(data);
+      } catch (err) {
+        console.error(
+          `Failed to fetch number of courts for branch ${selectedBranch}`
+        );
+      }
     };
-      fetchNumberOfCourts();
-    }, [selectedBranch]);
+    fetchNumberOfCourts();
+  }, [selectedBranch]);
 
   const handleDayOfWeekChange = (event) => {
     const { value, checked } = event.target;
@@ -371,8 +408,8 @@ const FixedBooking = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    const token = localStorage.getItem('token');
-    if(!token){
+    const token = localStorage.getItem("token");
+    if (!token) {
       setShowLogin(true);
       return;
     }
@@ -380,11 +417,18 @@ const FixedBooking = () => {
     const monthValidation = fixMonthValidation(numberOfMonths);
     const startTimeValidation = fixStartTimeValidation(slotStartTime);
     const endTimeValidation = fixEndTimeValidation(slotStartTime, slotEndTime);
+    const dayOfWeekValidation = fixDayOfWeekValidation(daysOfWeek);
     setMonthValidation(monthValidation);
     setStartTimeValidation(startTimeValidation);
     setEndTimeValidation(endTimeValidation);
+    setDayOfWeekValidation(dayOfWeekValidation);
 
-    if(!monthValidation.isValid || !startTimeValidation.isValid || !endTimeValidation.isValid){
+    if (
+      !monthValidation.isValid ||
+      !startTimeValidation.isValid ||
+      !endTimeValidation.isValid ||
+      !dayOfWeekValidation.isValid
+    ) {
       setMessage("Please try again");
       setMessageType("error");
       return;
@@ -417,6 +461,7 @@ const FixedBooking = () => {
       totalPrice,
       userId: userData.userId, // Truyền cả userId
       email: user.email, // và email
+      userName: user.userName,
       numberOfMonths,
       daysOfWeek,
       startDate: formattedStartDate,
@@ -431,6 +476,52 @@ const FixedBooking = () => {
       state,
     });
   };
+
+  //fetch rating tổng xong rồi đưa vào averageRating
+  useEffect(() => {
+    const fetchRating = async () => {
+      try {
+        console.log("selectedBranch của rating:", selectedBranch);
+        const data = await fetchPercentRatingByBranch(selectedBranch);
+        setAverageRating(data);
+      } catch (error) {
+        console.error("Error fetching rating", error);
+      }
+    };
+
+    fetchRating();
+  }, [selectedBranch]);
+
+  //fetch rating nhỏ
+  useEffect(() => {
+    const fetchEachPercentRating = async () => {
+      try {
+        const data = await fetchEachPercentRatingByBranch(selectedBranch);
+        console.log("data:", data);
+        setListRating(data);
+      } catch (error) {
+        console.error("Error fetching rating", error);
+      }
+    };
+    fetchEachPercentRating();
+  }, [selectedBranch]);
+
+  const handleStartTimeChange = (e) => {
+    const value = e.target.value;
+    const [hour] = value.split(':');
+    setSlotStartTime(value);
+  
+    const startHour = parseInt(hour, 10);
+    if (isNaN(startHour) || startHour < 0 || startHour > 23) {
+      setStartTimeValidation({ message: 'Please select a valid hour (0-23).' });
+      setSlotEndTime('');
+    } else {
+      setStartTimeValidation({ message: '' });
+      const endHour = (startHour + 1) % 24;
+      setSlotEndTime(`${endHour.toString().padStart(2, '0')}:00:00`);
+    }
+  };
+  const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
 
   const pictures = JSON.parse(branch.branchPicture).slice(0, 5);
 
@@ -491,7 +582,7 @@ const FixedBooking = () => {
                   <span style={{ fontWeight: 700 }}>{branch.branchPhone} </span>
                 </div>
               </div>
-              <div className="services-info">
+              <div style={{marginTop: 60}} className="services-info">
                 <div className="service-title">Convenient Service</div>
                 <div className="service-list">
                   <span className="service-item">
@@ -562,10 +653,13 @@ const FixedBooking = () => {
                             required
                             InputLabelProps={{ style: { color: "black" } }}
                             InputProps={{ style: { color: "black" } }}
+                            inputProps={{min: 1}}
                           />
                           {monthValidation.message && (
-                <p className="errorVal">{monthValidation.message}</p>
-              )}
+                            <p className="errorVal">
+                              {monthValidation.message}
+                            </p>
+                          )}
                         </FormControl>
                       </Grid>
                       <Grid item xs={12}>
@@ -595,6 +689,11 @@ const FixedBooking = () => {
                             sx={{ color: "black" }}
                           />
                         ))}
+                        {dayOfWeekValidation.message && (
+                            <p className="errorVal">
+                              {dayOfWeekValidation.message}
+                            </p>
+                          )}
                       </Grid>
                       <Grid item xs={12}>
                         <Typography sx={{ color: "black" }}>
@@ -611,37 +710,46 @@ const FixedBooking = () => {
                         />
                       </Grid>
                       <Grid item xs={12}>
-                        <FormControl fullWidth>
-                          <TextField
-                            label="Slot Start Time"
-                            type="text"
-                            value={slotStartTime}
-                            onChange={(e) => setSlotStartTime(e.target.value)}
-                            required
-                            InputLabelProps={{ style: { color: "black" } }}
-                            InputProps={{ style: { color: "black" } }}
-                          />
-                          {startTimeValidation.message && (
-                <p className="errorVal">{startTimeValidation.message}</p>
-              )}
-                        </FormControl>
-                      </Grid>
-                      <Grid item xs={12}>
-                        <FormControl fullWidth>
-                          <TextField
-                            label="Slot End Time"
-                            type="text"
-                            value={slotEndTime}
-                            onChange={(e) => setSlotEndTime(e.target.value)}
-                            required
-                            InputLabelProps={{ style: { color: "black" } }}
-                            InputProps={{ style: { color: "black" } }}
-                          />
-                          {endTimeValidation.message && (
-                <p className="errorVal">{endTimeValidation.message}</p>
-              )}
-                        </FormControl>
-                      </Grid>
+                      <FormControl fullWidth>
+          <TextField
+            select
+            label="Slot Start Time"
+            value={slotStartTime}
+            onChange={handleStartTimeChange}
+            required
+            InputLabelProps={{ style: { color: 'black' } }}
+            InputProps={{ style: { color: 'black' } }}
+          >
+            {hours.map((hour) => (
+              <MenuItem key={hour} value={`${hour}:00:00`}>
+                {hour}:00:00
+              </MenuItem>
+            ))}
+          </TextField>
+          {startTimeValidation.message && (
+            <p className="errorVal">
+              {startTimeValidation.message}
+            </p>
+          )}
+        </FormControl>
+      </Grid>
+      <Grid item xs={12}>
+        <FormControl fullWidth>
+          <TextField
+            label="Slot End Time"
+            type="text"
+            value={slotEndTime}
+            disabled
+            InputLabelProps={{ style: { color: 'black' } }}
+            InputProps={{ style: { color: 'black' } }}
+          />
+          {endTimeValidation.message && (
+            <p className="errorVal">
+              {endTimeValidation.message}
+            </p>
+          )}
+        </FormControl>
+      </Grid>
                       <Grid item xs={12}>
                         <Button
                           variant="contained"
@@ -687,7 +795,9 @@ const FixedBooking = () => {
             <h2>Rating this Branch</h2>
             <div className="average-rating">
               <div className="average-score">
-                <span className="score">5.0</span>
+                <span className="score">
+                  {Math.round(AverageRating * 10) / 10}
+                </span>
                 <span className="star">★</span>
               </div>
               <div>
@@ -707,37 +817,53 @@ const FixedBooking = () => {
               <div className="rating-bar">
                 <span className="stars">★★★★★</span>
                 <div className="bar">
-                  <div className="fill" style={{ width: "0%" }}></div>
+                  <div
+                    className="fill"
+                    style={{ width: `${listRating[4]}%` }}
+                  ></div>
                 </div>
-                <span className="percentage">0%</span>
+                {/* làm tròn đơn vị math round được chưa nhân*/}
+                <span className="percentage">{Math.round(listRating[4])}%</span>
               </div>
               <div className="rating-bar">
                 <span className="stars">★★★★☆</span>
                 <div className="bar">
-                  <div className="fill" style={{ width: "0%" }}></div>
+                  <div
+                    className="fill"
+                    style={{ width: `${listRating[3]}%` }}
+                  ></div>
                 </div>
-                <span className="percentage">0%</span>
+                <span className="percentage">{Math.round(listRating[3])}%</span>
               </div>
               <div className="rating-bar">
                 <span className="stars">★★★☆☆</span>
                 <div className="bar">
-                  <div className="fill" style={{ width: "0%" }}></div>
+                  <div
+                    className="fill"
+                    style={{ width: `${listRating[2]}%` }}
+                  ></div>
                 </div>
-                <span className="percentage">0%</span>
+                <span className="percentage">{Math.round(listRating[2])}%</span>
               </div>
               <div className="rating-bar">
                 <span className="stars">★★☆☆☆</span>
                 <div className="bar">
-                  <div className="fill" style={{ width: "0%" }}></div>
+                  <div
+                    className="fill"
+                    style={{ width: `${listRating[1]}%` }}
+                  ></div>
                 </div>
-                <span className="percentage">0%</span>
+                <span className="percentage">{Math.round(listRating[1])}%</span>
               </div>
               <div className="rating-bar">
                 <span className="stars">★☆☆☆☆</span>
                 <div className="bar">
-                  <div className="fill" style={{ width: "0%" }}></div>
+                  <div
+                    className="fill"
+                    style={{ width: `${listRating[0]}%` }}
+                  ></div>
                 </div>
-                <span className="percentage">0%</span>
+                <span className="percentage">{Math.round(listRating[0])}%</span>
               </div>
             </div>
             {reviewFormVisible && (
@@ -803,7 +929,7 @@ const FixedBooking = () => {
                             </span>
                             <FaStar style={{ color: "gold" }} />
                           </div>
-                          {review.id === userData.userId && (
+                          {userData && review.id === userData.userId && (
                             <CiEdit
                               style={{
                                 marginRight: "10px",
@@ -863,43 +989,55 @@ const FixedBooking = () => {
         </div>
 
         {showLogin && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0, 0, 0, 0.85)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-          }}
-        >
-          <RequestLogin />
-        </Box>
-      )}
+          <Box
+            sx={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              backgroundColor: "rgba(0, 0, 0, 0.85)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+            }}
+          >
+            <RequestLogin />
+          </Box>
+        )}
 
-       {/* Booking request */}
-       {showRequestBooking && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0, 0, 0, 0.85)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-          }}
-        >
-          <RequestBooking />
-        </Box>
-      )}
+        {/* Booking request */}
+        {showRequestBooking && (
+          <Box
+            sx={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              backgroundColor: "rgba(0, 0, 0, 0.85)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+            }}
+          >
+            <RequestBooking />
+          </Box>
+        )}
+
+        {/* Review request */}
+        {modalIsOpen && (
+          <Modal
+            isOpen={modalIsOpen}
+            onRequestClose={closeModal}
+            className="review-modal"
+            overlayClassName="review-modal-overlay"
+          >
+            <RequestForReviewing />
+          </Modal>
+        )}
       </div>
     </>
   );

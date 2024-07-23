@@ -1,16 +1,40 @@
-import React, { useState, useEffect } from "react";
-import { Box, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Button, TextField, Stepper, Step, StepLabel, Typography, Divider, Card, CardContent, CardHeader, Grid,} from "@mui/material";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Box,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Button,
+  Stepper,
+  Step,
+  StepLabel,
+  Typography,
+  Select,
+  MenuItem,
+  Divider,
+  Grid,
+} from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import PaymentIcon from "@mui/icons-material/Payment";
-import { generatePaymentToken, processPayment, processBalancePayment } from "api/paymentApi";
+import {
+  generatePaymentToken,
+  processPayment,
+  processBalancePayment,
+} from "api/paymentApi";
 import LoadingPage from "./LoadingPage";
-import { reserveSlots, createBookingFlex, deleteBookingInFlex, } from "api/bookingApi";
+import {
+  reserveSlots,
+  createBookingFlex,
+  deleteBookingInFlex,
+} from "api/bookingApi";
 import { addTimeSlotIfExistBooking } from "api/timeSlotApi";
-import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import { fetchAvailableCourts, fetchCourtByBranchId } from "api/courtApi";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import * as signalR from "@microsoft/signalr";
+
 
 const theme = createTheme({
   components: {
@@ -33,6 +57,9 @@ const PaymentDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const {
+    email,
+    userName,
+    userId,
     branchId,
     bookingRequests,
     totalPrice,
@@ -50,67 +77,18 @@ const PaymentDetail = () => {
     : [];
   const [activeStep, setActiveStep] = useState(0);
 
-  const [email, setEmail] = useState("");
-  const [userEmail, setUserEmail] = useState("");
-  const [userId, setUserId] = useState("");
-  const [user, setUser] = useState(null);
-  const [userData, setUserData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [userName, setUserName] = useState("");
   const [connection, setConnection] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [showFlexPayment, setShowFlexPayment] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      const decoded = jwtDecode(token);
-      console.log(decoded);
-      setUserEmail(decoded.email);
-
-      const fetchUserData = async (id, isGoogle) => {
-        try {
-          if (isGoogle) {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/GetUserDetailByUserEmail/${id}`
-            );
-            setUserData(response.data);
-            setUserName(response.data.fullName);
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/GetUserDetailByUserEmail/${id}?searchValue=${id}`
-            );
-            setUser(userResponse.data);
-          } else {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/${id}`
-            );
-            setUserData(response.data);
-            setUserName(response.data.fullName);
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/${id}`
-            );
-            console.log("userResponse", userResponse.data);
-            setUser(userResponse.data);
-          }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-      };
-
-      if (decoded.iss !== "https://accounts.google.com") {
-        const userId = decoded.Id;
-        setUserId(userId);
-        fetchUserData(userId, false);
-      } else {
-        const userId = decoded.email;
-        setUserId(userId);
-        fetchUserData(userId, true);
-      }
-    }
-  }, []);
+  const [courts, setCourts] = useState([]);
+  const [availableCourts, setAvailableCourts] = useState({});
+  const [selectedCourts, setSelectedCourts] = useState({});
+  const [eventCourt, setEventCourt] = useState(0);
+  //fetch chỉ 1 lần
+  const isFetchCourt = useRef(false);
 
   //đấm nhau với signalR
   useEffect(() => {
@@ -164,12 +142,12 @@ const PaymentDetail = () => {
   }, [connection]);
 
   useEffect(() => {
-    if(type === "flexible" && availableSlot !== 0){
+    if (type === "flexible" && availableSlot !== 0) {
       setShowFlexPayment(true);
-    }else{
+    } else {
       setShowFlexPayment(false);
     }
-  }, [])
+  }, []);
 
   // gửi slot để backend signalr nó check
   const sendUnavailableSlotCheck = async () => {
@@ -195,14 +173,83 @@ const PaymentDetail = () => {
       alert("No connection to server yet.");
     }
   };
+  useEffect(() => {
+    if (branchId) {
+      const loadCourts = async () => {
+        const data = await fetchCourtByBranchId(branchId, 1, 100);
+        setCourts(data.items);
+      };
+      loadCourts();
+    }
+  }, [branchId]);
+
+  const handleCourtChange = async (
+    index,
+    slotDate,
+    slotStartTime,
+    slotEndTime
+  ) => {
+    try {
+      const availableCourtsData = await fetchAvailableCourts(
+        branchId,
+        slotDate,
+        slotStartTime,
+        slotEndTime
+      );
+      setAvailableCourts((prevState) => ({
+        ...prevState,
+        [index]: availableCourtsData,
+      }));
+    } catch (error) {
+      console.error("Error fetching available courts:", error);
+    }
+  };
+
+  const handleCourtSelection = (index, courtId) => {
+    const currentSlot = sortedBookingRequests[index];
+    const isDuplicate = sortedBookingRequests.some((request, idx) => {
+      return (
+        idx !== index &&
+        request.slotDate === currentSlot.slotDate &&
+        request.timeSlot.slotStartTime === currentSlot.timeSlot.slotStartTime &&
+        request.timeSlot.slotEndTime === currentSlot.timeSlot.slotEndTime &&
+        selectedCourts[idx] === courtId
+      );
+    });
+
+    if (isDuplicate) {
+      alert("You now have some same booking slot, please choose another court");
+      return;
+    }
+
+    setSelectedCourts((prevState) => ({
+      ...prevState,
+      [index]: courtId,
+    }));
+  };
+
+  useEffect(() => {
+    if (branchId && sortedBookingRequests.length > 0 && !isFetchCourt.current) {
+      sortedBookingRequests.forEach((request, index) => {
+        handleCourtChange(
+          index,
+          request.slotDate,
+          request.timeSlot.slotStartTime,
+          request.timeSlot.slotEndTime
+        );
+        console.log("branch", branchId, "sort là ", sortedBookingRequests);
+      });
+      isFetchCourt.current = true;
+    }
+  }, [eventCourt]);
 
   const handleNext = async (paymentMethod) => {
     try {
       await sendUnavailableSlotCheck();
 
       if (type === "flexible" && availableSlot !== 0 && bookingId) {
-        const bookingForm = bookingRequests.map((request) => ({
-          courtId: null,
+        const bookingForm = bookingRequests.map((request, index) => ({
+          courtId: selectedCourts[index] || null,
           branchId: branchId,
           slotDate: request.slotDate,
           timeSlot: {
@@ -219,14 +266,12 @@ const PaymentDetail = () => {
           },
         });
         return;
-      }
-
-      else if (type === "flexible" && availableSlot === 0) {
+      } else if (type === "flexible" && availableSlot === 0) {
         let id = null;
         try {
           setIsLoading(true);
-          const bookingForm = bookingRequests.map((request) => ({
-            courtId: null,
+          const bookingForm = bookingRequests.map((request, index) => ({
+            courtId: selectedCourts[index] || null,
             branchId: branchId,
             slotDate: request.slotDate,
             timeSlot: {
@@ -237,26 +282,29 @@ const PaymentDetail = () => {
           }));
 
           const createBookingTypeFlex = await createBookingFlex(
-            userData.userId,
+            userId,
             numberOfSlot,
             branchId
           );
 
           id = createBookingTypeFlex.bookingId;
-          const booking = await reserveSlots(userData.userId, bookingForm);
+          const booking = await reserveSlots(userId, bookingForm);
           setActiveStep((prevActiveStep) => prevActiveStep + 1);
-          const tokenResponse = await generatePaymentToken(booking.bookingId);
+          const tokenResponse = await generatePaymentToken(id);
           const token = tokenResponse.token;
+          
           if (paymentMethod === "Balance") {
             try {
               await processBalancePayment(token);
               navigate("/confirm");
             } catch (error) {
               console.error("Balance payment failed:", error);
-              navigate("/reject");
+             navigate("/reject");
+             
+
             }
           } else {
-            const paymentResponse = await processPayment(token);
+            const paymentResponse = await processPayment("Customer", token);
             const paymentUrl = paymentResponse;
             window.location.href = paymentUrl;
             return;
@@ -280,24 +328,27 @@ const PaymentDetail = () => {
       if (activeStep === 0) {
         setIsLoading(true);
         try {
-          const bookingForm = bookingRequests.map((request) => {
+          const bookingForm = bookingRequests.map((request, index) => {
             return {
-              courtId: null,
+              courtId: selectedCourts[index] || null,
               branchId: branchId,
               slotDate: request.slotDate,
               timeSlot: {
+                slotDate: request.slotDate,
                 slotStartTime: request.timeSlot.slotStartTime,
                 slotEndTime: request.timeSlot.slotEndTime,
               },
             };
           });
 
-          const booking = await reserveSlots(userData.userId, bookingForm);
+          console.log("bookingForm", bookingForm);
+
+          const booking = await reserveSlots(userId, bookingForm);
           setActiveStep((prevActiveStep) => prevActiveStep + 1);
 
           const tokenResponse = await generatePaymentToken(booking.bookingId);
           const token = tokenResponse.token;
-
+    
           if (paymentMethod === "Balance") {
             try {
               await processBalancePayment(token);
@@ -305,9 +356,10 @@ const PaymentDetail = () => {
             } catch (error) {
               console.error("Balance payment failed:", error);
               navigate("/reject");
+              
             }
           } else {
-            const paymentResponse = await processPayment(token);
+            const paymentResponse = await processPayment("Customer", token);
             const paymentUrl = paymentResponse;
             window.location.href = paymentUrl;
             return;
@@ -322,7 +374,6 @@ const PaymentDetail = () => {
       console.error("Error sending unavailable slot check:", error);
     }
   };
-
 
   const handleBack = () => {
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
@@ -350,9 +401,7 @@ const PaymentDetail = () => {
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <strong>{userName}</strong>
               </Box>
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                {userEmail}
-              </Box>
+              <Box sx={{ display: "flex", alignItems: "center" }}>{email}</Box>
             </Box>
 
             {/* box này là thông tin payment method */}
@@ -366,99 +415,86 @@ const PaymentDetail = () => {
               }}
             >
               <Grid container spacing={2}>
-                {showFlexPayment ? (<Grid item xs={12} md={6}>
-                  <Box
-                    sx={{
-                      backgroundColor: "#E0E0E0",
-                      padding: "20px",
-                      borderRadius: 2,
-                      maxHeight: "400px",
-                      overflowY: "auto",
-                    }}
-                  >
-                    <Typography
-                      variant="h5"
-                      gutterBottom
-                      color="black"
-                      display="flex"
-                      alignItems="center"
+                {showFlexPayment ? (
+                  <Grid item xs={12} md={6}>
+                    <Box
+                      sx={{
+                        backgroundColor: "#E0E0E0",
+                        padding: "20px",
+                        borderRadius: 2,
+                        maxHeight: "400px",
+                        overflowY: "auto",
+                      }}
                     >
-                      <PaymentIcon sx={{ marginRight: "8px" }} /> Payment Method
-                    </Typography>
-                    <FormControl component="fieldset">
-                      <FormLabel component="legend" sx={{ color: "black" }}>
-                        <strong>You don't need to select payment method because you have {availableSlot} slot(s) now !</strong>
-                      </FormLabel>
-                      {/* <RadioGroup
-                        aria-label="payment method"
-                        name="paymentMethod"
-                        value={selectedPaymentMethod}
-                        onChange={handlePaymentMethodChange}
+                      <Typography
+                        variant="h5"
+                        gutterBottom
+                        color="black"
+                        display="flex"
+                        alignItems="center"
                       >
-                        <FormControlLabel
-                          value="creditCard"
-                          control={<Radio />}
-                          label="Credit Card"
-                          sx={{ color: "black" }}
-                        />
-                        <FormControlLabel
-                          value="Balance"
-                          control={<Radio />}
-                          label="Balance"
-                          sx={{ color: "black" }}
-                        />
-                      </RadioGroup> */}
-                    </FormControl>
-                  </Box>
-                </Grid>
-              ) : (
-                <Grid item xs={12} md={6}>
-                  <Box
-                    sx={{
-                      backgroundColor: "#E0E0E0",
-                      padding: "20px",
-                      borderRadius: 2,
-                      maxHeight: "400px",
-                      overflowY: "auto",
-                    }}
-                  >
-                    <Typography
-                      variant="h5"
-                      gutterBottom
-                      color="black"
-                      display="flex"
-                      alignItems="center"
+                        <PaymentIcon sx={{ marginRight: "8px" }} /> Payment
+                        Method
+                      </Typography>
+                      <FormControl component="fieldset">
+                        <FormLabel component="legend" sx={{ color: "black" }}>
+                          <strong>
+                            You don't need to select payment method because you
+                            have {availableSlot} remaining slot(s) now
+                          </strong>
+                        </FormLabel>
+                      </FormControl>
+                    </Box>
+                  </Grid>
+                ) : (
+                  <Grid item xs={12} md={6}>
+                    <Box
+                      sx={{
+                        backgroundColor: "#E0E0E0",
+                        padding: "20px",
+                        borderRadius: 2,
+                        maxHeight: "400px",
+                        overflowY: "auto",
+                      }}
                     >
-                      <PaymentIcon sx={{ marginRight: "8px" }} /> Payment Method
-                    </Typography>
-                    <FormControl component="fieldset">
-                      <FormLabel component="legend" sx={{ color: "black" }}>
-                        Select Payment Method
-                      </FormLabel>
-                      <RadioGroup
-                        aria-label="payment method"
-                        name="paymentMethod"
-                        value={selectedPaymentMethod}
-                        onChange={handlePaymentMethodChange}
+                      <Typography
+                        variant="h5"
+                        gutterBottom
+                        color="black"
+                        display="flex"
+                        alignItems="center"
                       >
-                        <FormControlLabel
-                          value="creditCard"
-                          control={<Radio />}
-                          label="Credit Card"
-                          sx={{ color: "black" }}
-                        />
-                        <FormControlLabel
-                          value="Balance"
-                          control={<Radio />}
-                          label="Balance"
-                          sx={{ color: "black" }}
-                        />
-                      </RadioGroup>
-                    </FormControl>
-                  </Box>
-                </Grid>
-              )}
-                
+                        <PaymentIcon sx={{ marginRight: "8px" }} /> Payment
+                        Method
+                      </Typography>
+                      <FormControl component="fieldset">
+                        <FormLabel component="legend" sx={{ color: "black" }}>
+                          Select Payment Method
+                        </FormLabel>
+                        <RadioGroup
+                          aria-label="payment method"
+                          name="paymentMethod"
+                          value={selectedPaymentMethod}
+                          onChange={handlePaymentMethodChange}
+                        >
+                          <FormControlLabel
+                            value="creditCard"
+                            control={<Radio />}
+                            label="Credit Card"
+                            sx={{ color: "black" }}
+                          />
+                          <FormControlLabel
+                            value="Balance"
+                            control={<Radio />}
+                            label="Balance"
+                            sx={{ color: "black" }}
+                          />
+                        </RadioGroup>
+                      </FormControl>
+                    </Box>
+                  </Grid>
+                )}
+
                 <Grid item xs={12} md={6}>
                   <Box
                     sx={{
@@ -504,13 +540,37 @@ const PaymentDetail = () => {
                             {request.timeSlot.slotEndTime}
                           </Typography>
                           <Typography variant="body1" color="black">
-                            <strong>Price:</strong> {request.price} USD
+                            <strong>Price:</strong> {request.price}K VND
                           </Typography>
+                          <FormControl fullWidth>
+                            <Select
+                              value={selectedCourts[index] || ""}
+                              onChange={(event) =>
+                                handleCourtSelection(index, event.target.value)
+                              }
+                            >
+                              {availableCourts[index] &&
+                              availableCourts[index].length > 0 ? (
+                                availableCourts[index].map((court) => (
+                                  <MenuItem
+                                    key={court.courtId}
+                                    value={court.courtId}
+                                  >
+                                    {court.courtName}
+                                  </MenuItem>
+                                ))
+                              ) : (
+                                <MenuItem disabled>
+                                  No courts available
+                                </MenuItem>
+                              )}
+                            </Select>
+                          </FormControl>
                         </Box>
                       ))}
                     <Divider sx={{ marginY: "10px" }} />
                     <Typography variant="h6" color="black">
-                      <strong>Total Price:</strong> {totalPrice} USD
+                      <strong>Total Price:</strong> {totalPrice}K VND
                     </Typography>
                   </Box>
                 </Grid>
@@ -542,38 +602,39 @@ const PaymentDetail = () => {
 
   return (
     <>
-    {showFlexPayment ? (<ThemeProvider theme={theme}>
-      <Box
-        m="20px"
-        p="20px"
-        sx={{ backgroundColor: "#F5F5F5", borderRadius: 2 }}
-      >
-        <Typography variant="h4" gutterBottom color="black">
-          Payment Details
-        </Typography>
-        <Stepper activeStep={activeStep} sx={{ marginBottom: "20px" }}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
-        {isLoading ? <LoadingPage /> : getStepContent(activeStep)}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: "20px",
-          }}
-        >
-          <Button
-            disabled={activeStep === 0}
-            onClick={handleBack}
-            sx={{ marginRight: "20px" }}
+      {showFlexPayment ? (
+        <ThemeProvider theme={theme}>
+          <Box
+            m="20px"
+            p="20px"
+            sx={{ backgroundColor: "#F5F5F5", borderRadius: 2 }}
           >
-            Back
-          </Button>
-          {/* <Button
+            <Typography variant="h4" gutterBottom color="black">
+              Payment Details
+            </Typography>
+            <Stepper activeStep={activeStep} sx={{ marginBottom: "20px" }}>
+              {steps.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
+            {isLoading ? <LoadingPage /> : getStepContent(activeStep)}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: "20px",
+              }}
+            >
+              <Button
+                disabled={activeStep === 0}
+                onClick={handleBack}
+                sx={{ marginRight: "20px" }}
+              >
+                Back
+              </Button>
+              {/* <Button
             style={{ marginLeft: "1125px" }}
             variant="contained"
             color="primary"
@@ -582,73 +643,71 @@ const PaymentDetail = () => {
           >
             {activeStep === steps.length - 1 ? "Finish" : "By Balance"}
           </Button> */}
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => handleNext("CreditCard")}
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => handleNext("CreditCard")}
+              >
+                {activeStep === steps.length - 1 ? "Finish" : "Next"}
+              </Button>
+            </Box>
+          </Box>
+        </ThemeProvider>
+      ) : (
+        <ThemeProvider theme={theme}>
+          <Box
+            m="20px"
+            p="20px"
+            sx={{ backgroundColor: "#F5F5F5", borderRadius: 2 }}
           >
-            {activeStep === steps.length - 1 ? "Finish" : "Next"}
-          </Button>
-        </Box>
-      </Box>
-    </ThemeProvider>
-    ) : (
-      <ThemeProvider theme={theme}>
-      <Box
-        m="20px"
-        p="20px"
-        sx={{ backgroundColor: "#F5F5F5", borderRadius: 2 }}
-      >
-        <Typography variant="h4" gutterBottom color="black">
-          Payment Details
-        </Typography>
-        <Stepper activeStep={activeStep} sx={{ marginBottom: "20px" }}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
-        {isLoading ? <LoadingPage /> : getStepContent(activeStep)}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: "20px",
-          }}
-        >
-          <Button
-            disabled={activeStep === 0}
-            onClick={handleBack}
-            sx={{ marginRight: "20px" }}
-          >
-            Back
-          </Button>
-          <Button
-            style={{ marginLeft: "1125px" }}
-            variant="contained"
-            color="primary"
-            onClick={() => handleNext("Balance")}
-            disabled={isLoading || selectedPaymentMethod !== 'Balance'} // Disable button while loading or if Credit Card is selected
-          >
-            {activeStep === steps.length - 1 ? "Finish" : "By Balance"}
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => handleNext("CreditCard")}
-            disabled={isLoading || selectedPaymentMethod !== 'creditCard'} // Disable button while loading or if Balance is selected
-          >
-            {activeStep === steps.length - 1 ? "Finish" : "VNPay"}
-          </Button>
-        </Box>
-      </Box>
-    </ThemeProvider>
-    )}
+            <Typography variant="h4" gutterBottom color="black">
+              Payment Details
+            </Typography>
+            <Stepper activeStep={activeStep} sx={{ marginBottom: "20px" }}>
+              {steps.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
+            {isLoading ? <LoadingPage /> : getStepContent(activeStep)}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: "20px",
+              }}
+            >
+              <Button
+                disabled={activeStep === 0}
+                onClick={handleBack}
+                sx={{ marginRight: "20px" }}
+              >
+                Back
+              </Button>
+              <Button
+                style={{ marginLeft: "1125px" }}
+                variant="contained"
+                color="primary"
+                onClick={() => handleNext("Balance")}
+                disabled={isLoading || selectedPaymentMethod !== "Balance"} // Disable button while loading or if Credit Card is selected
+              >
+                {activeStep === steps.length - 1 ? "Finish" : "By Balance"}
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => handleNext("CreditCard")}
+                disabled={isLoading || selectedPaymentMethod !== "creditCard"} // Disable button while loading or if Balance is selected
+              >
+                {activeStep === steps.length - 1 ? "Finish" : "VNPay"}
+              </Button>
+            </Box>
+          </Box>
+        </ThemeProvider>
+      )}
     </>
   );
 };
 
 export default PaymentDetail;
-
-//hãy chỉnh cho tôi nếu 

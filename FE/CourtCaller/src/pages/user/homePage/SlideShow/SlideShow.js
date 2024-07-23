@@ -19,7 +19,6 @@ const SlideShowHomePage = () => {
                     `https://courtcaller.azurewebsites.net/api/News/SlideShowImage`
                 );
                 const data = await response.json();
-                console.log("data", data);
                 setNews(data ?? []);;
             } catch (err) {
                 setError("Failed to fetch data");

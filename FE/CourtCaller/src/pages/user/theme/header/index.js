@@ -1,18 +1,17 @@
 import { memo, useState, useEffect } from "react";
 import "./style.scss";
-import "./styleHeader.scss"
+import "./styleHeader.scss";
 import { AiOutlineUser } from "react-icons/ai";
 import { MdOutlineGridView } from "react-icons/md";
 import { LuHeartHandshake } from "react-icons/lu";
 import { RiLogoutBoxRFill } from "react-icons/ri";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ROUTERS } from "utils/router";
 import { Slide, ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from 'AuthContext';
-import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
+import api from "api/api";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -22,37 +21,28 @@ const Header = () => {
   const [user, setUser] = useState(null);
   const [userId, setUserId] = useState(null);
   const [userName, setUserName] = useState('');
-  const [userPic, setUserPic] = useState('')
-  // console.log("userData", userData)
-  // console.log("user", user)
+  const [userPic, setUserPic] = useState('');
+  const [activeMenu, setActiveMenu] = useState(ROUTERS.USER.HOME); // Add state for active menu item
 
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     if (token) {
       const decoded = jwtDecode(token);
-      setUserName(decoded.name)
-      setUserPic(decoded.picture)
+      setUserName(decoded.name);
+      setUserPic(decoded.picture);
 
       const fetchUserData = async (id, isGoogle) => {
         try {
           if (isGoogle) {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/GetUserDetailByUserEmail/${id}`
-            );
+            const response = await api.get(`/UserDetails/GetUserDetailByUserEmail/${id}`);
             setUserData(response.data);
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/GetUserDetailByUserEmail/${id}?searchValue=${id}`
-            );
+            const userResponse = await api.get(`/Users/GetUserDetailByUserEmail/${id}?searchValue=${id}`);
             setUser(userResponse.data);
           } else {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/${id}`
-            );
+            const response = await api.get(`/UserDetails/${id}`);
             setUserData(response.data);
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/${id}`
-            );
+            const userResponse = await api.get(`/Users/${id}`);
             setUser(userResponse.data);
           }
         } catch (error) {
@@ -71,16 +61,12 @@ const Header = () => {
       }
     }
   }, []);
-  
+
   const [menus] = useState([
     {
       name: "Home",
       path: ROUTERS.USER.HOME,
     },
-    // {
-    //   name: "Schedule Booking",
-    //   path: ROUTERS.USER.SCHEDULEPAGE,
-    // },
     {
       name: "News",
       path: ROUTERS.USER.NEWS,
@@ -100,21 +86,27 @@ const Header = () => {
     setShowProfilePopup(!showProfilePopup);
   };
 
+  const handleMenuClick = (path) => {
+    setActiveMenu(path);
+  };
+
   return (
     <>
       <div className="container">
         <div className="row">
-          <div className="col-xl-3 ">
+          <div className="col-xl-3">
             <div className="header_logo">
               <h1>Court Caller</h1>
             </div>
           </div>
-          <div className="col-xl-6 ">
+          <div className="col-xl-6">
             <nav className="header_menu">
               <ul>
-                {menus?.map((menu, menuKey) => (
-                  <li key={menuKey} className={menuKey === 0 ? "active" : ""}>
-                    <Link to={menu?.path}>{menu?.name}</Link>
+                {menus.map((menu, menuKey) => (
+                  <li key={menuKey} className={activeMenu === menu.path ? "active" : ""}>
+                    <Link to={menu.path} onClick={() => handleMenuClick(menu.path)}>
+                      {menu.name}
+                    </Link>
                     {menu.child && (
                       <ul className="header_menu_dropdown">
                         {menu.child.map((childItem, childKey) => (
@@ -129,13 +121,12 @@ const Header = () => {
               </ul>
             </nav>
           </div>
-
           <div className="col-xl-3">
             <div className="header_login">
               <ul>
                 {user ? (
                   <li className="profile-section">
-                    <div className="profile-button" >
+                    <div className="profile-button">
                       <button className="button2" onClick={toggleProfilePopup}>Profile</button>
                     </div>
                     <div className={`profile-popup ${showProfilePopup ? 'active' : ''}`}>
@@ -148,12 +139,11 @@ const Header = () => {
                       </div>
                       <ul className="profile-actions">
                         <li>
-                        <MdOutlineGridView style={{fontSize: 20}} />
-                        <Link to="/profile">View profile</Link>
+                          <MdOutlineGridView style={{fontSize: 20}} />
+                          <Link to="/profile">View profile</Link>
                         </li>
-                        
                         <li onClick={handleLogout}>
-                        <RiLogoutBoxRFill style={{fontSize: 20}} />
+                          <RiLogoutBoxRFill style={{fontSize: 20}} />
                           <a>Log out</a>
                         </li>
                       </ul>

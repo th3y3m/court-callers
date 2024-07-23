@@ -20,8 +20,20 @@ import ResetPassword from 'pages/user/resetPass/index';
 import Flexible from 'pages/user/bookingFlex/Flexible';
 import FlexibleBooking from 'pages/user/bookingFlex/FlexibleBooking';
 
+const guestAllowedRoutes = [
+  ROUTERS.USER.HOME,
+  ROUTERS.USER.LOGIN,
+  ROUTERS.USER.BYDAY,
+  ROUTERS.USER.FIXBOOKING,
+  ROUTERS.USER.FLEXIBLE,
+];
+
 const ProtectedRoute = ({ component: Component, allowedRoles, ...rest }) => {
   const userRole = localStorage.getItem('userRole');
+
+  if (!userRole && !guestAllowedRoutes.includes(rest.path)) {
+    return <Navigate to={ROUTERS.USER.LOGIN} />;
+  }
 
   if (userRole && !allowedRoles.includes(userRole)) {
     return <Navigate to={ROUTERS.USER.LOGIN} />;
@@ -55,7 +67,7 @@ const renderUserRouter = () => {
             key={key}
             path={item.path}
             element={
-              <ProtectedRoute component={item.component} allowedRoles={['Customer', '']} />
+              <ProtectedRoute component={item.component} allowedRoles={['Customer']} path={item.path} />
             }
           />
         ))}
@@ -68,9 +80,9 @@ const RouterCustom = () => {
   return (
     <Routes>
       <Route path={ROUTERS.USER.LOGIN} element={<Login />} />
-      <Route path="/*" element={renderUserRouter()} />
       <Route path={ROUTERS.USER.FORGETPASSWORD} element={<ForgetPassword />} />
       <Route path={ROUTERS.USER.RESETPASSWORD} element={<ResetPassword />} />
+      <Route path="/*" element={renderUserRouter()} />
     </Routes>
   );
 };

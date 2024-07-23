@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Box, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Button, Stepper, Step, StepLabel, Typography, Divider, Grid, TextField } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import PaymentIcon from '@mui/icons-material/Payment';
 import { generatePaymentToken, processPayment } from 'api/paymentApi';
 import { createFixedBooking } from 'api/bookingApi';
 import LoadingPage from './LoadingPage';
 import { processBalancePayment } from 'api/paymentApi';
+import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
+import * as signalR from '@microsoft/signalr';
+
 
 const theme = createTheme({
   components: {
@@ -38,66 +39,86 @@ const formatDate = (dateString) => {
 const PaymentDetailFixed = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { branchId, bookingRequests, totalPrice, numberOfMonths, daysOfWeek, startDate, slotStartTime, slotEndTime } = location.state || {};
-  const [userId, setUserId] = useState('');
-  const [user, setUser] = useState(null);
-  const [userData, setUserData] = useState(null);
-  const [userName, setUserName] = useState('');
+  const { email, userName, userId, branchId, bookingRequests, totalPrice, numberOfMonths, daysOfWeek, startDate, slotStartTime, slotEndTime } = location.state || {};
   const [userEmail, setUserEmail] = useState('');
   const [activeStep, setActiveStep] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [connection, setConnection] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
 
-  console.log('bookdata: ', branchId, bookingRequests, totalPrice, numberOfMonths, daysOfWeek, startDate, bookingRequests[0].slotDate, slotStartTime, slotEndTime)
+  console.log('bookdata: ', branchId, bookingRequests, totalPrice, numberOfMonths, daysOfWeek, startDate, bookingRequests[0].slotDate, slotStartTime, slotEndTime);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const newConnection = new HubConnectionBuilder()
+      .withUrl("https://courtcaller.azurewebsites.net/timeslothub", {
+        transport: signalR.HttpTransportType.WebSockets
+      })
+      .withAutomaticReconnect()
+      .configureLogging(LogLevel.Information)
+      .build();
 
-    if (token) {
-      const decoded = jwtDecode(token);
-      setUserEmail(decoded.email)
+    newConnection.onreconnecting((error) => {
+      console.log(`Connection lost due to error "${error}". Reconnecting.`);
+      setIsConnected(false);
+    });
 
-      const fetchUserData = async (id, isGoogle) => {
+    newConnection.onreconnected((connectionId) => {
+      console.log(`Connection reestablished. Connected with connectionId "${connectionId}".`);
+      setIsConnected(true);
+    });
+
+    newConnection.onclose((error) => {
+      console.log(`Connection closed due to error "${error}". Try refreshing this page to restart the connection.`);
+      setIsConnected(false);
+    });
+    console.log('Initializing connection...');
+    setConnection(newConnection);
+  }, []);
+
+  useEffect(() => {
+    if (connection) {
+      const startConnection = async () => {
         try {
-          if (isGoogle) {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/GetUserDetailByUserEmail/${id}`
-            );
-            setUserData(response.data);
-            setUserName(response.data.fullName)
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/GetUserDetailByUserEmail/${id}?searchValue=${id}`
-            );
-            setUser(userResponse.data);
-
-          } else {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/${id}`
-            );
-            setUserData(response.data);
-            setUserName(response.data.fullName)
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/${id}`
-            );
-            setUser(userResponse.data);
-          }
+          await connection.start();
+          console.log('SignalR Connected.');
+          setIsConnected(true);
         } catch (error) {
-          console.error("Error fetching user data:", error);
+          console.log('Error starting connection:', error);
+          setIsConnected(false);
+          setTimeout(startConnection, 5000);
         }
       };
-
-      if (decoded.iss !== "https://accounts.google.com") {
-        const userId = decoded.Id;
-        setUserId(userId);
-        fetchUserData(userId, false);
-      } else {
-        const userId = decoded.email;
-        setUserId(userId);
-        fetchUserData(userId, true);
-      }
+      startConnection();
     }
-  }, []);
+  }, [connection]);
+
+  const sendUnavailableSlotCheck = async () => {
+    if (connection) {
+      const lastRequest = bookingRequests[bookingRequests.length - 1];
+     
+      const slotCheckModel = {
+       branchId: branchId,
+        slotDate: lastRequest.slotDate,
+        timeSlot: {
+          slotDate: lastRequest.slotDate,
+          slotStartTime: lastRequest.timeSlot.slotStartTime,
+          slotEndTime: lastRequest.timeSlot.slotEndTime,
+        }
+      };
+      console.log('SlotCheckModel:', slotCheckModel);
+      try {
+        await connection.send('DisableSlot', slotCheckModel);
+        console.log('Data sent to server:', slotCheckModel);
+      } catch (e) {
+        console.log('Error sending data to server:', e);
+      }
+    } else {
+      alert('No connection to server yet.');
+    }
+  };
+
   
   const handleNext = async (paymentMethod) => {
     if (activeStep === 0) {
@@ -109,7 +130,7 @@ const PaymentDetailFixed = () => {
           numberOfMonths,
           daysOfWeek,
           formattedStartDate,
-          userData.userId,
+          userId,
           branchId,
           bookingRequests[0].slotDate,
           slotStartTime,
@@ -119,6 +140,7 @@ const PaymentDetailFixed = () => {
 
         const bookingId = response.bookingId;
         const tokenResponse = await generatePaymentToken(bookingId);
+        await sendUnavailableSlotCheck();
         const token = tokenResponse.token;
         if (paymentMethod === "Balance") {
           try {
@@ -166,7 +188,7 @@ const PaymentDetailFixed = () => {
                 <strong>{userName}</strong>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                {userEmail}
+                {email}
               </Box>
             </Box>
 
@@ -226,7 +248,7 @@ const PaymentDetailFixed = () => {
                     </Typography>
                     <Divider sx={{ marginY: '10px' }} />
                     <Typography variant="h6" color="black">
-                      <strong>Total Price:</strong> {totalPrice} VND
+                      <strong>Total Price:</strong> {totalPrice}K VND
                     </Typography>
                   </Box>
                 </Grid>

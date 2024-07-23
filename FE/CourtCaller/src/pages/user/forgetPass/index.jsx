@@ -36,6 +36,7 @@ const ForgetPassword = () => {
 
     try {
       const response = await forgetPassword(email);
+     
       if (response.success) {
         setSuccess(response.message);
         setError("");
@@ -44,7 +45,13 @@ const ForgetPassword = () => {
         setSuccess("");
       }
     } catch (error) {
-      console.log("error in forget password", error);
+      if (error.response && error.response.data && error.response.data.message) {
+        console.log("Error fetching email:", error.response.data.message);
+        setError(error.response.data.message);
+      } else {
+        console.log("Error fetching email:", error.message);
+        setError("An unexpected error occurred");
+      }
     } finally {
       setLoading(false);
     }
@@ -90,7 +97,7 @@ const ForgetPassword = () => {
           </form>
 
           <>
-            <p style={{ fontSize: "large" }} classNames="signup-link">
+            <p style={{ fontSize: "large" }} className="signup-link">
               Don't have an account?
               <Link style={{ textDecoration: "none" }} to="/login">
                 <a href="#" className="signup-link link">

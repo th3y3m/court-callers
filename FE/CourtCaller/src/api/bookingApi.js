@@ -1,5 +1,5 @@
 // bookingApi.js
-import axios from 'axios';
+import api from './api';
 
 const url = 'https://courtcaller.azurewebsites.net/api';
 
@@ -7,7 +7,7 @@ const url = 'https://courtcaller.azurewebsites.net/api';
 export const checkBookingTypeFlex = async (userId, branchId) => {
   try {
     const params = { userId, branchId };
-    const response = await axios.get(`${url}/Bookings/checkbookingtypeflex`, { params });
+    const response = await api.get(`${url}/Bookings/checkbookingtypeflex`, { params });
     return response.data;
   } catch (error) {
     console.error('Error checking booking type flex:', error.response ? error.response.data : error.message);
@@ -19,7 +19,7 @@ export const checkBookingTypeFlex = async (userId, branchId) => {
 export const fetchBookings = async (pageNumber = 1, pageSize = 10, searchQuery = '') => {
   try {
     const params = { pageNumber, pageSize, searchQuery };
-    const response = await axios.get(`${url}/Bookings`, { params });
+    const response = await api.get(`${url}/Bookings`, { params });
 
     if (response.data && Array.isArray(response.data.data)) {
       const items = response.data.data;
@@ -37,7 +37,7 @@ export const fetchBookings = async (pageNumber = 1, pageSize = 10, searchQuery =
 // Delete a booking by ID
 export const deleteBooking = async (id) => {
   try {
-    const response = await axios.delete(`${url}/Bookings/delete/${id}`);
+    const response = await api.delete(`${url}/Bookings/delete/${id}`);
     return response.data;
   } catch (error) {
     console.error('Error deleting booking:', error.response ? error.response.data : error.message);
@@ -48,7 +48,7 @@ export const deleteBooking = async (id) => {
 // Reserve slots for a user
 export const reserveSlots = async (userId, bookings) => {
   try {
-    const response = await axios.post(`${url}/Bookings/reserve-slot?userId=${userId}`, bookings);
+    const response = await api.post(`${url}/Bookings/reserve-slot?userId=${userId}`, bookings);
     return response.data;
   } catch (error) {
     console.error('Error reserving slots', error);
@@ -59,7 +59,7 @@ export const reserveSlots = async (userId, bookings) => {
 // Fetch booking by ID
 export const fetchBookingById = async (bookingId) => {
   try {
-    const response = await axios.get(`${url}/Bookings/${bookingId}`);
+    const response = await api.get(`${url}/Bookings/${bookingId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching booking by ID:', error.response ? error.response.data : error.message);
@@ -69,7 +69,7 @@ export const fetchBookingById = async (bookingId) => {
 
 export const fetchBookingByUserId = async (userId) => {
   try {
-    const response = await axios.get(`${url}/Bookings/userId/${userId}`);
+    const response = await api.get(`${url}/Bookings/userId/${userId}`);
     console.log('fetchBookingByUserId', response.data)
     return response.data;
   } catch (error) {
@@ -81,7 +81,7 @@ export const fetchBookingByUserId = async (userId) => {
 // Create a flexible booking
 export const createBookingFlex = async (userId, numberOfSlot, branchId) => {
   try {
-    const response = await axios.post(`${url}/Bookings/flex`, null, {
+    const response = await api.post(`${url}/Bookings/flex`, null, {
       params: {
         userId,
         numberOfSlot,
@@ -128,7 +128,7 @@ export const createFixedBooking = async (numberOfMonths, daysOfWeek, formattedSt
       slotEndTime,
     });
 
-    const response = await axios.post(
+    const response = await api.post(
       urlWithParams,
       [{
         slotDate,
@@ -159,7 +159,7 @@ export const createFixedBooking = async (numberOfMonths, daysOfWeek, formattedSt
 
 export const deleteBookingInFlex = async (id) => {
   try {
-    const response = await axios.delete(`${url}/Bookings/${id}`);
+    const response = await api.delete(`${url}/Bookings/${id}`);
     return response.data;
   } catch (error) {
     console.error('Error deleting booking:', error.response ? error.response.data : error.message);
@@ -170,7 +170,7 @@ export const deleteBookingInFlex = async (id) => {
 
 export const fetchQrcode = async (bookingId) => {
   try {
-    const response = await axios.get(`${url}/Bookings/qrcode/${bookingId}`);
+    const response = await api.get(`${url}/Bookings/qrcode/${bookingId}`);
     return response.data.qrCodeBase64;
   } catch (error) {
     throw new Error('Network response was not ok: ' + error.message);

@@ -1,11 +1,11 @@
-import axios from 'axios';
+import api from "./api";
 
 const url = 'https://courtcaller.azurewebsites.net/api';
 
 export const fetchEachPercentRatingByBranch = async (branchId) => {
     try {
        
-      const response = await axios.get(`${url}/Reviews/GetRatingPercentageOfABranch/${branchId}` );
+      const response = await api.get(`${url}/Reviews/GetRatingPercentageOfABranch/${branchId}` );
   
       return response.data;
     } catch (error) {
@@ -17,7 +17,7 @@ export const fetchEachPercentRatingByBranch = async (branchId) => {
   export const fetchPercentRatingByBranch = async (branchId) => {
     try {
        
-      const response = await axios.get(`${url}/Reviews/AverageRating/${branchId}` );
+      const response = await api.get(`${url}/Reviews/AverageRating/${branchId}` );
   
       return response.data;
     } catch (error) {

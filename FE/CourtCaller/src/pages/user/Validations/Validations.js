@@ -1,5 +1,5 @@
 const API_URL =
-  "https://courtcaller.azurewebsites.net/api/Users?pageNumber=1&pageSize=100";
+  "https://courtcaller.azurewebsites.net/api/UserDetails/GetUserDetailByUserEmail/";
 
 export const validateEmail = async (email) => {
   const emailRegex = /[A-Z0-9._%+-]+@[A-Z0-9-]+.+.[A-Z]{2,4}/gim;
@@ -8,15 +8,9 @@ export const validateEmail = async (email) => {
     return { isValid: false, message: "Wrong Email format! (abc@gmail.com)" };
   }
   try {
-    const response = await fetch(API_URL);
-    if (!response.ok) {
-      throw new Error("Failed to fetch user detail");
-    }
+    const response = await fetch(`${API_URL}/${email}`);
 
-    const users = await response.json();
-    const resetEmail = users.data.map((user) => user.email.toLowerCase());
-
-    if (!resetEmail.includes(email.toLowerCase())) {
+    if (response.status === 404) {
       return {
         isValid: false,
         message: "THERE IS NO ACCOUNT WITH THIS EMAIL!",

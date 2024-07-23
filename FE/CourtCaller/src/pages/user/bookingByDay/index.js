@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { FaWifi, FaMotorcycle, FaBowlFood } from "react-icons/fa6";
 import { FaCar, FaStar } from "react-icons/fa";
 import { RiDrinks2Fill } from "react-icons/ri";
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { MdOutlineLocalDrink } from "react-icons/md";
 import pic1 from "assets/users/images/byday/pic1.webp";
@@ -15,8 +14,6 @@ import {
   Button,
   Grid,
   Typography,
-  Select,
-  MenuItem,
   FormControl,
   IconButton,
 } from "@mui/material";
@@ -30,6 +27,7 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { CiEdit } from "react-icons/ci";
 import "./styles.scss";
 import "react-multi-carousel/lib/styles.css";
+import Modal from "react-modal";
 import "./style.scss";
 import DisplayMap from "map/DisplayMap";
 import * as signalR from "@microsoft/signalr";
@@ -39,9 +37,22 @@ import {
   LogLevel,
 } from "@microsoft/signalr";
 import { fetchUnavailableSlots } from "../../../api/timeSlotApi";
+import { checkBookingTypeFlex } from "api/bookingApi";
+import api from "api/api";
 import RequestLogin from "../requestUserLogin";
 import RequestBooking from "../requestUserBooking";
-import {fetchPercentRatingByBranch, fetchEachPercentRatingByBranch} from "../../../api/reviewApi";
+import {
+  fetchPercentRatingByBranch,
+  fetchEachPercentRatingByBranch,
+} from "../../../api/reviewApi";
+import {
+  reviewTextValidation,
+  valueValidation,
+} from "../Validations/reviewValidation";
+import RequestForReviewing from "../requestForReviewing";
+import "../NavigateToFlex/styleNavigateFlex.css";
+
+Modal.setAppElement("#root");
 
 dayjs.extend(isSameOrBefore);
 
@@ -123,7 +134,7 @@ const BookByDay = () => {
   const [startOfWeek, setStartOfWeek] = useState(dayjs().startOf("week"));
   const [weekdayPrice, setWeekdayPrice] = useState(0);
   const [weekendPrice, setWeekendPrice] = useState(0);
-  const [numberOfCourt, setNumberOfCourts] = useState('');
+  const [numberOfCourt, setNumberOfCourts] = useState("");
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [openTime, setOpentime] = useState(branch.openTime);
   const [closeTime, setClosetime] = useState(branch.closeTime);
@@ -143,6 +154,8 @@ const BookByDay = () => {
   const [isUserVip, setUserVip] = useState(false);
   const [userData, setUserData] = useState(null);
   const [user, setUser] = useState(null);
+  const [availableSlot, setAvailableSlot] = useState(null);
+  const [bookingId, setBookingId] = useState(null);
   const [connection, setConnection] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [AverageRating, setAverageRating] = useState(null);
@@ -153,6 +166,9 @@ const BookByDay = () => {
   const selectBranchRef = useRef(selectedBranch);
   const [showLogin, setShowLogin] = useState(false); // State to manage visibility of RequestLogin component
   const [showRequestBooking, setShowRequestBooking] = useState(false);
+  const [showNavigateFlex, setShowNavigateFlex] = useState(false);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+
   useEffect(() => {
     selectBranchRef.current = selectedBranch;
   }, [selectedBranch]);
@@ -169,30 +185,21 @@ const BookByDay = () => {
 
       const fetchUserData = async (id, isGoogle) => {
         try {
+          let response, userResponse;
           if (isGoogle) {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/GetUserDetailByUserEmail/${id}`
+            response = await api.get(
+              `/UserDetails/GetUserDetailByUserEmail/${id}`
             );
-            setUserData(response.data);
-           
-           
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/GetUserDetailByUserEmail/${id}?searchValue=${id}`
+            userResponse = await api.get(
+              `/Users/GetUserDetailByUserEmail/${id}?searchValue=${id}`
             );
-            setUser(userResponse.data);
-        
           } else {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/${id}`
-            );
-            setUserData(response.data);
-       console.log('response nè:', response.data.isVip); 
-            setUserVip(response.data.isVip);
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/${id}`
-            );
-            setUser(userResponse.data);
+            response = await api.get(`/UserDetails/${id}`);
+            userResponse = await api.get(`/Users/${id}`);
           }
+          setUserData(response.data);
+         
+          setUser(userResponse.data);
         } catch (error) {
           console.error("Error fetching user data:", error);
         }
@@ -314,8 +321,8 @@ const BookByDay = () => {
   };
 
   const handleSubmitReview = async () => {
-    const token = localStorage.getItem('token');
-    if(!token){
+    const token = localStorage.getItem("token");
+    if (!token) {
       setShowLogin(true);
       return;
     }
@@ -326,14 +333,23 @@ const BookByDay = () => {
     }
 
     const checkBooking = await fetchBookingByUserId(userData.userId);
-    const listBranchId = checkBooking.map((booking) => booking.branchId);
-    if(!listBranchId.includes(selectedBranch)){
+
+    if (checkBooking.length == 0) {
       setShowRequestBooking(true);
       return;
     }
 
-    if(checkBooking.length == 0){
+    const listBranchId = checkBooking.map((booking) => booking.branchId);
+    if (!listBranchId.includes(selectedBranch)) {
       setShowRequestBooking(true);
+      return;
+    }
+
+    const starValidation = valueValidation(highlightedStars);
+    const remarkValidation = reviewTextValidation(reviewText);
+
+    if (!starValidation.isValid || !remarkValidation.isValid) {
+      setModalIsOpen(true);
       return;
     }
 
@@ -350,10 +366,7 @@ const BookByDay = () => {
       };
 
       try {
-        await axios.post(
-          "https://courtcaller.azurewebsites.net/api/Reviews",
-          reviewData
-        );
+        await api.post("/Reviews", reviewData);
         setReviewFormVisible(false);
         // Xử lý sau khi gửi đánh giá thành công (ví dụ: thông báo cho người dùng, cập nhật danh sách đánh giá, v.v.)
       } catch (error) {
@@ -367,8 +380,8 @@ const BookByDay = () => {
 
   const handleViewReviews = async () => {
     try {
-      const response = await axios.get(
-        `https://courtcaller.azurewebsites.net/api/Reviews/GetReviewsByBranch/${selectedBranch}`,
+      const response = await api.get(
+        `/Reviews/GetReviewsByBranch/${selectedBranch}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -382,8 +395,8 @@ const BookByDay = () => {
           let userFullName = "Unknown User";
           if (review.id) {
             try {
-              const userDetailsResponse = await axios.get(
-                `https://courtcaller.azurewebsites.net/api/UserDetails/${review.id}`,
+              const userDetailsResponse = await api.get(
+                `/UserDetails/${review.id}`,
                 {
                   headers: {
                     "Content-Type": "application/json",
@@ -428,8 +441,8 @@ const BookByDay = () => {
 
       console.log("editingReview", editingReview);
 
-      const response = await axios.put(
-        `https://courtcaller.azurewebsites.net/api/Reviews/${editingReview.reviewId}`,
+      const response = await api.put(
+        `/Reviews/${editingReview.reviewId}`,
         updatedReviewData,
         {
           headers: {
@@ -455,28 +468,32 @@ const BookByDay = () => {
     const fetchPrices = async () => {
       try {
         console.log("isUserVip:", isUserVip);
-        const prices = await fetchPrice(isUserVip,selectedBranch);
+        const prices = await fetchPrice(isUserVip, selectedBranch);
         setWeekdayPrice(prices.weekdayPrice);
         setWeekendPrice(prices.weekendPrice);
-        console.log("prices:", prices); 
+        console.log("prices:", prices);
       } catch (error) {
         console.error("Error fetching prices", error);
       }
     };
 
     fetchPrices();
-  }, [selectedBranch,isUserVip]);
+  }, [selectedBranch, isUserVip]);
 
   useEffect(() => {
-  const fetchNumberOfCourts = async () => {
+    const fetchNumberOfCourts = async () => {
       try {
-        const response = await fetch(`https://courtcaller.azurewebsites.net/numberOfCourt/${selectedBranch}`);
+        const response = await fetch(
+          `https://courtcaller.azurewebsites.net/numberOfCourt/${selectedBranch}`
+        );
         const data = await response.json();
         setNumberOfCourts(data);
       } catch (err) {
-        console.error(`Failed to fetch number of courts for branch ${selectedBranch}`);
+        console.error(
+          `Failed to fetch number of courts for branch ${selectedBranch}`
+        );
       }
-  };
+    };
     fetchNumberOfCourts();
   }, [selectedBranch]);
 
@@ -496,7 +513,6 @@ const BookByDay = () => {
       const decimalCloseTime = timeStringToDecimal("14:00:00");
       const timeSlots = generateTimeSlots(decimalOpenTime, decimalCloseTime);
       setMorningTimeSlots(timeSlots);
-  
     }
   }, [openTime]);
 
@@ -513,8 +529,37 @@ const BookByDay = () => {
     }
   }, [closeTime]);
 
+  useEffect(() => {
+    const fetchingFlexSlot = async () => {
+      if (!user) {
+        console.error("User is null");
+        return;
+      }
+
+      try {
+        const availableSlot = await checkBookingTypeFlex(
+          userData.userId,
+          selectedBranch
+        );
+        console.log("availableSlot:", availableSlot);
+
+        setAvailableSlot(availableSlot.numberOfSlot); // Update the state
+        setBookingId(availableSlot.bookingId);
+      } catch (error) {
+        console.error("error fetching available Slot", error);
+      }
+    };
+
+    fetchingFlexSlot();
+  }, [user, selectedBranch]);
+
   // xử lý khi click vào slot
   const handleSlotClick = (slot, day, price) => {
+    if (availableSlot != 0) {
+      setShowNavigateFlex(true);
+      return;
+    }
+
     const slotId = `${day.format("YYYY-MM-DD")}_${slot}_${price}`;
 
     // Tìm tất cả các slot cùng thời gian đã được chọn
@@ -601,14 +646,19 @@ const BookByDay = () => {
   // xử lý khi click vào nút continue qua trang tiếp theo
   //(Nhân lấy về cần chú ý là chỉ lấy các slot đã click qua trang mới chứ chưa post api booking, và chưa lấy userid)
   const handleContinue = async () => {
-    const token = localStorage.getItem('token');
-    if(!token) {
+    const token = localStorage.getItem("token");
+    if (!token) {
       setShowLogin(true);
       return;
     }
 
     if (!selectedBranch) {
       alert("Please select a branch first");
+      return;
+    }
+
+    if (selectedSlots == 0) {
+      alert("You need to choose slot(s) first");
       return;
     }
 
@@ -628,6 +678,9 @@ const BookByDay = () => {
 
     navigate("/payment-detail", {
       state: {
+        email: user.email,
+        userName: user.userName,
+        userId: userData.userId,
         branchId: selectedBranch,
         bookingRequests,
         totalPrice: bookingRequests.reduce(
@@ -678,37 +731,56 @@ const BookByDay = () => {
   //fetch rating tổng xong rồi đưa vào averageRating
   useEffect(() => {
     const fetchRating = async () => {
-        try {
-          console.log('selectedBranch của rating:', selectedBranch);
-            const data = await fetchPercentRatingByBranch(selectedBranch);
-            setAverageRating(data);
-        } catch (error) {
-            console.error('Error fetching rating', error);
-        }
+      try {
+        console.log("selectedBranch của rating:", selectedBranch);
+        const data = await fetchPercentRatingByBranch(selectedBranch);
+        setAverageRating(data);
+      } catch (error) {
+        console.error("Error fetching rating", error);
+      }
     };
 
     fetchRating();
-}, [selectedBranch]);
+  }, [selectedBranch]);
 
-  //fetch rating nhỏ 
-useEffect(() => { 
-  const fetchEachPercentRating = async () => {
-    try {
-      const data = await fetchEachPercentRatingByBranch(selectedBranch);
-      console.log('data:', data);
-      setListRating(data);
-    } catch (error) {
-      console.error('Error fetching rating', error);
-    }
+  //fetch rating nhỏ
+  useEffect(() => {
+    const fetchEachPercentRating = async () => {
+      try {
+        const data = await fetchEachPercentRatingByBranch(selectedBranch);
+        console.log("data:", data);
+        setListRating(data);
+      } catch (error) {
+        console.error("Error fetching rating", error);
+      }
+    };
+    fetchEachPercentRating();
+  }, [selectedBranch]);
+
+  const closeModal = () => {
+    setModalIsOpen(false);
   };
-  fetchEachPercentRating();
-}, [selectedBranch]);
-  
 
-
+  const closeNavigateToFlex = () => {
+    setShowNavigateFlex(false);
+  };
 
   const days = weekDays;
   const pictures = JSON.parse(branch.branchPicture).slice(0, 5);
+
+  const handleNavigate = () => {
+    navigate("/flexible", {
+      state: {
+        userId,
+        selectedBranchByDay: selectedBranch,
+        branch,
+      },
+    });
+  };
+
+  const currentDay = new Date().getDate();
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
 
   return (
     <>
@@ -868,7 +940,7 @@ useEffect(() => {
                       backgroundColor: showAfternoon ? "#0D1B34" : "#FFFFFF",
                       color: showAfternoon ? "white" : "#0D1B34",
                       textTransform: "none",
-                      marginBottom: "0",
+                      marginBottom: "5",
                     }}
                     onClick={handleToggleAfternoon}
                   >
@@ -1027,10 +1099,17 @@ useEffect(() => {
             {branch.branchId && (
               <Box
                 display="flex"
-                justifyContent="end"
+                justifyContent="space-between"
                 mt={1}
                 marginRight={"12px"}
               >
+                <Typography
+                  variant="body2"
+                  color="textSecondary"
+                  sx={{ mt: 2, color: "red", fontWeight: "bold" }}
+                >
+                  1K = 1000 VND (104k = 104.000 VND)
+                </Typography>
                 <Button
                   variant="contained"
                   sx={{
@@ -1077,7 +1156,9 @@ useEffect(() => {
             <h2>Rating this Branch</h2>
             <div className="average-rating">
               <div className="average-score">
-                <span className="score">{AverageRating}</span>
+                <span className="score">
+                  {Math.round(AverageRating * 10) / 10}
+                </span>
                 <span className="star">★</span>
               </div>
               <div>
@@ -1097,7 +1178,10 @@ useEffect(() => {
               <div className="rating-bar">
                 <span className="stars">★★★★★</span>
                 <div className="bar">
-                  <div className="fill" style={{ width:  `${listRating[4]}%` }}></div>
+                  <div
+                    className="fill"
+                    style={{ width: `${listRating[4]}%` }}
+                  ></div>
                 </div>
                 {/* làm tròn đơn vị math round được chưa nhân*/}
                 <span className="percentage">{Math.round(listRating[4])}%</span>
@@ -1105,28 +1189,40 @@ useEffect(() => {
               <div className="rating-bar">
                 <span className="stars">★★★★☆</span>
                 <div className="bar">
-                  <div className="fill" style={{ width: `${listRating[3]}%` }}></div>
+                  <div
+                    className="fill"
+                    style={{ width: `${listRating[3]}%` }}
+                  ></div>
                 </div>
                 <span className="percentage">{Math.round(listRating[3])}%</span>
               </div>
               <div className="rating-bar">
                 <span className="stars">★★★☆☆</span>
                 <div className="bar">
-                  <div className="fill" style={{ width: `${listRating[2]}%` }}></div>
+                  <div
+                    className="fill"
+                    style={{ width: `${listRating[2]}%` }}
+                  ></div>
                 </div>
                 <span className="percentage">{Math.round(listRating[2])}%</span>
               </div>
               <div className="rating-bar">
                 <span className="stars">★★☆☆☆</span>
                 <div className="bar">
-                  <div className="fill" style={{ width: `${listRating[1]}%` }}></div>
+                  <div
+                    className="fill"
+                    style={{ width: `${listRating[1]}%` }}
+                  ></div>
                 </div>
                 <span className="percentage">{Math.round(listRating[1])}%</span>
               </div>
               <div className="rating-bar">
                 <span className="stars">★☆☆☆☆</span>
                 <div className="bar">
-                  <div className="fill" style={{ width: `${listRating[0]}%` }}></div>
+                  <div
+                    className="fill"
+                    style={{ width: `${listRating[0]}%` }}
+                  ></div>
                 </div>
                 <span className="percentage">{Math.round(listRating[0])}%</span>
               </div>
@@ -1255,43 +1351,91 @@ useEffect(() => {
 
         {/* Login request */}
         {showLogin && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0, 0, 0, 0.85)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-          }}
-        >
-          <RequestLogin />
-        </Box>
-      )}
+          <Box
+            sx={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              backgroundColor: "rgba(0, 0, 0, 0.85)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+            }}
+          >
+            <RequestLogin />
+          </Box>
+        )}
 
-      {/* Booking request */}
-      {showRequestBooking && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0, 0, 0, 0.85)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-          }}
-        >
-          <RequestBooking />
-        </Box>
-      )}
+        {/* Booking request */}
+        {showRequestBooking && (
+          <Box
+            sx={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              backgroundColor: "rgba(0, 0, 0, 0.85)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+            }}
+          >
+            <RequestBooking />
+          </Box>
+        )}
+
+        {/* Review request */}
+        {modalIsOpen && (
+          <Modal
+            isOpen={modalIsOpen}
+            onRequestClose={closeModal}
+            className="review-modal"
+            overlayClassName="review-modal-overlay"
+          >
+            <RequestForReviewing />
+          </Modal>
+        )}
+
+        {/* Navigate to Flex */}
+        {showNavigateFlex && (
+          <Modal
+            isOpen={showNavigateFlex}
+            onRequestClose={closeNavigateToFlex}
+            className="review-modal"
+            overlayClassName="review-modal-overlay"
+          >
+            <div className="card">
+              <h3 className="card__title">Notification!</h3>
+              <p className="card__content">
+                You now already have some remaining slots in booking type flex,
+                we will navigate you. Please click the arrow button under.
+              </p>
+              <div className="card__date">
+                {currentMonth + " " + currentDay + ", " + currentYear}
+              </div>
+              <div className="card__arrow">
+                <svg
+                  onClick={handleNavigate}
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  height="15"
+                  width="15"
+                >
+                  <path
+                    fill="#fff"
+                    d="M13.4697 17.9697C13.1768 18.2626 13.1768 18.7374 13.4697 19.0303C13.7626 19.3232 14.2374 19.3232 14.5303 19.0303L20.3232 13.2374C21.0066 12.554 21.0066 11.446 20.3232 10.7626L14.5303 4.96967C14.2374 4.67678 13.7626 4.67678 13.4697 4.96967C13.1768 5.26256 13.1768 5.73744 13.4697 6.03033L18.6893 11.25H4C3.58579 11.25 3.25 11.5858 3.25 12C3.25 12.4142 3.58579 12.75 4 12.75H18.6893L13.4697 17.9697Z"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+          </Modal>
+        )}
       </div>
     </>
   );

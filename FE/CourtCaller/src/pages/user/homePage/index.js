@@ -2,7 +2,7 @@ import { memo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import "react-multi-carousel/lib/styles.css";
-import feature1Img from "assets/users/images/featured/images.jpg";
+import { ScaleLoader } from "react-spinners";
 import hero from "assets/users/images/categories/image.png";
 import cat1Img from "assets/users/images/categories/cat-1.png";
 import cat2Img from "assets/users/images/categories/cat-2.png";
@@ -15,8 +15,7 @@ import { animateScroll as scroll } from 'react-scroll';
 import SlideShowHomePage from "./SlideShow/SlideShow";
 import getUserLocation from "map/Geolocation";
 import { jwtDecode } from "jwt-decode";
-import axios from "axios";
-
+import api from "api/api";
 
 Modal.setAppElement('#root'); // Add this to avoid screen readers issues
 
@@ -46,57 +45,6 @@ const HomePage = () => {
   };
 
   useEffect(() => {
-    const fetchBranches = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(
-          `https://courtcaller.azurewebsites.net/api/Branches?pageNumber=${pageNumber}&pageSize=${itemsPerPage}`
-        );
-        const data = await response.json();
-        setBranches(data.data); // Assuming the API returns branches in an array called "data"
-        setTotalBranches(data.total); // Assuming the API returns total count of branches
-        await fetchPrices(isUserVip,data.data);
-        await fetchNumberOfCourts(data.data);
-      } catch (err) {
-        setError("Failed to fetch data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBranches();
-  }, [pageNumber]);
-
-  const itemsPerPage = 9;
-  const totalPages = Math.ceil(totalBranches / itemsPerPage);
-
-  const isJson = (str) => {
-    try {
-      JSON.parse(str)
-    } catch (error) {
-      return false
-    }
-    return true
-  }
-
-  console.log("branches", branches)
-
-  const fetchNumberOfCourts = async (branchData) => {
-    const courtsData = {};
-    for (const branch of branchData) {
-      try {
-        const response = await fetch(`https://courtcaller.azurewebsites.net/numberOfCourt/${branch.branchId}`);
-        const data = await response.json();
-        courtsData[branch.branchId] = data;
-      } catch (err) {
-        console.error(`Failed to fetch number of courts for branch ${branch.branchId}`);
-      }
-    }
-    setNumberOfCourts(courtsData);
-  }
-
-  useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       const decodedToken = jwtDecode(token);
@@ -104,30 +52,17 @@ const HomePage = () => {
 
       const fetchUserData = async (id, isGoogle) => {
         try {
+          let response, userResponse;
           if (isGoogle) {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/GetUserDetailByUserEmail/${id}`
-            );
-            setUserData(response.data);
-            setUserVip(response.data.isVip);
-           
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/GetUserDetailByUserEmail/${id}?searchValue=${id}`
-            );
-            setUser(userResponse.data);
-        
+            response = await api.get(`/UserDetails/GetUserDetailByUserEmail/${id}`);
+            userResponse = await api.get(`/Users/GetUserDetailByUserEmail/${id}?searchValue=${id}`);
           } else {
-            const response = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/UserDetails/${id}`
-            );
-            setUserData(response.data);
-       console.log('response nè:', response.data.isVip); 
-            setUserVip(response.data.isVip);
-            const userResponse = await axios.get(
-              `https://courtcaller.azurewebsites.net/api/Users/${id}`
-            );
-            setUser(userResponse.data);
+            response = await api.get(`/UserDetails/${id}`);
+            userResponse = await api.get(`/Users/${id}`);
           }
+          setUserData(response.data);
+         
+          setUser(userResponse.data);
         } catch (error) {
           console.error("Error fetching user data:", error);
         }
@@ -145,11 +80,64 @@ const HomePage = () => {
     }
   }, []);
 
-  const fetchPrices = async (isUserVip,branchData) => {
+  useEffect(() => {
+    console.log("isUserVip", isUserVip);
+  }, [isUserVip]);
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(
+          `https://courtcaller.azurewebsites.net/api/Branches?pageNumber=${pageNumber}&pageSize=${itemsPerPage}`
+        );
+        const data = await response.json();
+        setBranches(data.data); // Assuming the API returns branches in an array called "data"
+        setTotalBranches(data.total); // Assuming the API returns total count of branches
+        await fetchPrices(isUserVip, data.data);
+        await fetchNumberOfCourts(data.data);
+      } catch (err) {
+        setError("Failed to fetch data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBranches();
+  }, [pageNumber, isUserVip]);
+
+  const itemsPerPage = 9;
+  const totalPages = Math.ceil(totalBranches / itemsPerPage);
+
+  const isJson = (str) => {
+    try {
+      JSON.parse(str)
+    } catch (error) {
+      return false
+    }
+    return true
+  }
+
+  const fetchNumberOfCourts = async (branchData) => {
+    const courtsData = {};
+    for (const branch of branchData) {
+      try {
+        const response = await fetch(`https://courtcaller.azurewebsites.net/numberOfCourt/${branch.branchId}`);
+        const data = await response.json();
+        courtsData[branch.branchId] = data;
+      } catch (err) {
+        console.error(`Failed to fetch number of courts for branch ${branch.branchId}`);
+      }
+    }
+    setNumberOfCourts(courtsData);
+  }
+
+  const fetchPrices = async (isUserVip, branchData) => {
     const pricesData = {};
     for (const branch of branchData) {
       try {
-        const { weekdayPrice, weekendPrice } = await fetchPrice(isUserVip,branch.branchId);
+        const { weekdayPrice, weekendPrice } = await fetchPrice(isUserVip, branch.branchId);
         pricesData[branch.branchId] = { weekdayPrice, weekendPrice };
       } catch (err) {
         console.error(`Failed to fetch price for branch ${branch.branchId}`);
@@ -168,7 +156,7 @@ const HomePage = () => {
       const data = await response.json();
       setBranches(data.data); // Assuming the API returns branches in an array called "data"
       setTotalBranches(data.total); // Assuming the API returns total count of branches
-      await fetchPrices(data.data);
+      await fetchPrices(isUserVip, data.data);
       await fetchNumberOfCourts(data.data);
     } catch (err) {
       setError("Failed to fetch data");
@@ -188,7 +176,7 @@ const HomePage = () => {
       const data = await response.json();
       setBranches(data.data.map(item => item.branch));
       setTotalBranches(data.total); // Assuming the API returns total count of branches
-      await fetchPrices(data.data.branch);
+      await fetchPrices(isUserVip, data.data.branch);
       await fetchNumberOfCourts(data.data.branch);
     } catch (err) {
       setError("Failed to fetch data");
@@ -301,12 +289,12 @@ const HomePage = () => {
                 <p>
                   {prices[branch.branchId]
                     ? `Weekday: ${prices[branch.branchId].weekdayPrice} VND`
-                    : 'Loading...'}
+                    : <ScaleLoader size={5} color="green"/>}
                 </p>
                 <p>
                   {prices[branch.branchId]
                     ? `Weekend: ${prices[branch.branchId].weekendPrice} VND`
-                    : 'Loading...'}
+                    : <ScaleLoader size={5} color="green"/>}
                 </p>
                 <button onClick={() => handleBookNow(branch)}>Book now</button>
               </div>
