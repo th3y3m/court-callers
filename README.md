@@ -1,7 +1,6 @@
 [![Court Callers Project (CI applied)](https://github.com/th3y3m/court-callers/actions/workflows/ci-script.yml/badge.svg)](https://github.com/th3y3m/court-callers/actions/workflows/ci-script.yml)
 ![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-Cre: [Src](https://github.com/halinhtvn3a/SWP391_Project)
 
 # Court Callers - Badminton Court Booking Management 🎾🏸
 Welcome to **Court Callers**! 🎉
@@ -72,7 +71,7 @@ Court Callers is a web application designed to simplify the process of booking b
 Feel free to reach out via [courtcallers@gmail.com](mailto:courtcallers@gmail.com) for any inquiries or support.
 
 ---
-
+Cre: [Src](https://github.com/halinhtvn3a/SWP391_Project)
 &#169; 2024 Court Callers
 
 ---
