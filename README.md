@@ -71,7 +71,8 @@ Court Callers is a web application designed to simplify the process of booking b
 Feel free to reach out via [courtcallers@gmail.com](mailto:courtcallers@gmail.com) for any inquiries or support.
 
 ---
-Cre: [Src](https://github.com/halinhtvn3a/SWP391_Project)
+Cre: [SWP391_Project](https://github.com/halinhtvn3a/SWP391_Project)
+
 &#169; 2024 Court Callers
 
 ---
