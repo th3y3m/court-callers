@@ -209,8 +209,9 @@ namespace API.Controllers
             var qrData = DecryptQRCode(request.QRCodeData);
 
             var allTimeSlot = _timeSlotService.GetTimeSlotsByBookingId(qrData.BookingId);
+            bool check = false;
             foreach (var timeSlot in allTimeSlot) {
-                if (timeSlot != null && timeSlot.Status == "Reserved" && timeSlot.BookingId == qrData.BookingId)
+               if (timeSlot != null && timeSlot.Status == "Reserved" && timeSlot.BookingId == qrData.BookingId)
                 {
                     //cần phải checked-in tất cả time slot ngày hôm đó luôn chứ không phải chỉ 1 time slot
 
@@ -219,11 +220,15 @@ namespace API.Controllers
                     {
                         t.Status = "checked-in";
                         await _timeSlotService.UpdateTimeSlotWithObject(t);
+                        check = true;
                     });
+                    
                 }
 
-                return Ok("Check-in successful.");
+
             }
+            if (check)
+                return Ok("Check-in successful.");
             return BadRequest("Invalid QR code or timeslot.");
         }
 

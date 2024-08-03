@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using DAOs.Helper;
 using DAOs.Models;
 using Microsoft.AspNetCore.Authorization;
+using StackExchange.Redis;
 
 namespace API.Controllers
 {
@@ -21,14 +22,15 @@ namespace API.Controllers
         private readonly UserService _userService;
         
 
-        public UsersController()
+        public UsersController(UserService userService, IConnectionMultiplexer redis)
         {
             _userService = new UserService();
+            _userService.InitializeRedis(redis);
         }
 
         // GET: api/Users
         [HttpGet]
-        [Authorize]
+   
 
         public async Task<ActionResult<PagingResponse<IdentityUser>>> GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string searchQuery = null)
         {

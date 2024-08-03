@@ -15,6 +15,7 @@ using Services.SignalRHub;
 using Microsoft.Extensions.Logging;
 using System.Text.Json.Serialization;
 using Services.MLModels;
+using StackExchange.Redis;
 
 
 
@@ -64,8 +65,33 @@ namespace API
         @"C:\FPTUNI\5\SWP391_Project\API\data\booking_data.csv",
         @"C:\FPTUNI\5\SWP391_Project\API\data\Model.zip"
     ));
-  
+
             builder.Services.AddScoped<ModelTrainingService>();
+
+            var redisConfigurationSection = builder.Configuration.GetSection("RedisConfiguration");
+
+            var redisConfiguration = new ConfigurationOptions
+            {
+                EndPoints = { $"{redisConfigurationSection["Host"]}:{redisConfigurationSection["Port"]}" },
+                Password = redisConfigurationSection["Password"],
+                Ssl = bool.Parse(redisConfigurationSection["Ssl"]),
+                AbortOnConnectFail = bool.Parse(redisConfigurationSection["AbortOnConnectFail"]),
+                ConnectRetry = 5, // Tăng số lần thử lại kết nối
+                ConnectTimeout = 5000, // Tăng thời gian chờ kết nối
+                SyncTimeout = 5000, // Tăng thời gian chờ đồng bộ
+                KeepAlive = 180 // Tăng thời gian keep-alive
+            };
+
+
+            // Đăng ký ConfigurationOptions làm singleton
+            builder.Services.AddSingleton(redisConfiguration);
+
+            // Kết nối đến Redis bằng ConfigurationOptions
+            builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+            {
+                var configuration = sp.GetRequiredService<ConfigurationOptions>();
+                return ConnectionMultiplexer.Connect(configuration);
+            });
 
             //// Add services to the container
             //builder.Services.AddControllers().AddJsonOptions(options =>
@@ -128,7 +154,8 @@ namespace API
                     }
                 });
             });
-
+            builder.Services.AddSingleton<UserService>();
+            builder.Services.AddScoped<UserRepository>();
             builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.AddScoped<PriceDAO>();
             builder.Services.AddScoped<PriceService>();
@@ -155,7 +182,7 @@ namespace API
                 options.AddPolicy("AllowSpecificOrigin",
                     policy =>
                     {
-                        policy.WithOrigins("https://localhost:3000", "https://courtcaller.azurewebsites.net", "https://localhost:7104", "https://court-caller-deploy-git-master-lethanhnhan91s-projects.vercel.app", "https://react-admin-lilac.vercel.app", "https://court-caller-deploy.vercel.app")
+                        policy.WithOrigins("https://localhost:3000", "https://courtcaller.azurewebsites.net", "https://localhost:7104", "https://court-caller-deploy-git-master-lethanhnhan91s-projects.vercel.app", "https://react-admin-lilac.vercel.app", "https://court-caller-deploy.vercel.app", "https://court-caller.vercel.app" , "https://court-caller-git-master-lethanhnhan91s-projects.vercel.app/")
                               .AllowAnyHeader()
                               .AllowAnyMethod()
                               .AllowCredentials();

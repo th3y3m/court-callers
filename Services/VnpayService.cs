@@ -117,7 +117,7 @@ namespace Services
                         return new PaymentStatusModel
                         {
                             IsSuccessful = true,
-                            RedirectUrl = $"https://localhost:3000/confirm?vnp_TxnRef={json["vnp_TxnRef"].ToString()}"
+                            RedirectUrl = $"https://court-caller.vercel.app/confirm?vnp_TxnRef={json["vnp_TxnRef"].ToString()}"
                         };
 
                     }
@@ -154,7 +154,7 @@ namespace Services
                         return new PaymentStatusModel
                         {
                             IsSuccessful = false,
-                            RedirectUrl = "https://localhost:3000/reject?vnp_TxnRef={json[\"vnp_TxnRef\"].ToString()}"
+                            RedirectUrl = "https://court-caller.vercel.app/reject?vnp_TxnRef={json[\"vnp_TxnRef\"].ToString()}"
                         };
                     }
                 }
