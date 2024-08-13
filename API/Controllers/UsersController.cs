@@ -22,10 +22,12 @@ namespace API.Controllers
         private readonly UserService _userService;
         
 
-        public UsersController(UserService userService, IConnectionMultiplexer redis)
+        public UsersController(UserService userService
+            //, IConnectionMultiplexer redis
+            )
         {
             _userService = new UserService();
-            _userService.InitializeRedis(redis);
+            //_userService.InitializeRedis(redis);
         }
 
         // GET: api/Users

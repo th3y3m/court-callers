@@ -1,5 +1,5 @@
 const API_URL =
-  "https://courtcaller.azurewebsites.net/api/UserDetails/GetUserDetailByUserEmail/";
+  "https://localhost:7104/api/UserDetails/GetUserDetailByUserEmail/";
 
 export const validateEmail = async (email) => {
   const emailRegex = /[A-Z0-9._%+-]+@[A-Z0-9-]+.+.[A-Z]{2,4}/gim;

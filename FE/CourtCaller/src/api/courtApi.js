@@ -1,6 +1,6 @@
 import api from "./api";
 
-const url = 'https://courtcaller.azurewebsites.net/api';
+const url = 'https://localhost:7104/api';
 
 // Fetch available courts
 export const fetchAvailableCourts = async (branchId, slotDate, slotStartTime, slotEndTime) => {
@@ -30,10 +30,10 @@ export const fetchCourtByBranchId = async (branchId, pageNumber = 1, pageSize = 
     const response = await api.get(`${url}/Courts/GetCourtsByBranchId`, { params });
 
     if (response.data && Array.isArray(response.data.data)) {
-      
+
       const items = response.data.data;
       const totalCount = response.data.total || 0;
-      
+
       return {
         items,
         totalCount

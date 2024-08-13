@@ -1,6 +1,6 @@
 import api from "./api";
 
-const url = 'https://courtcaller.azurewebsites.net/api';
+const url = 'https://localhost:7104/api';
 
 export const fetchPayments = async (pageNumber = 1, pageSize = 10) => {
   try {

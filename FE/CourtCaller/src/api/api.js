@@ -7,7 +7,7 @@ const getToken = () => {
 
 
 const api = axios.create({
-  baseURL: 'https://courtcaller.azurewebsites.net/api',
+  baseURL: 'https://localhost:7104/api',
 });
 
 

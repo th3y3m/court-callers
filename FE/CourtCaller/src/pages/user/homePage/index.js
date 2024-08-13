@@ -90,7 +90,7 @@ const HomePage = () => {
       setError(null);
       try {
         const response = await fetch(
-          `https://courtcaller.azurewebsites.net/api/Branches?pageNumber=${pageNumber}&pageSize=${itemsPerPage}`
+          `https://localhost:7104/api/Branches?pageNumber=${pageNumber}&pageSize=${itemsPerPage}`
         );
         const data = await response.json();
         setBranches(data.data); // Assuming the API returns branches in an array called "data"
@@ -151,7 +151,7 @@ const HomePage = () => {
     setError(null);
     try {
       const response = await fetch(
-        `https://courtcaller.azurewebsites.net/api/Branches?pageNumber=${pageNumber}&pageSize=${itemsPerPage}&searchQuery=${district + ", " + city}`
+        `https://localhost:7104/api/Branches?pageNumber=${pageNumber}&pageSize=${itemsPerPage}&searchQuery=${district + ", " + city}`
       );
       const data = await response.json();
       setBranches(data.data); // Assuming the API returns branches in an array called "data"
@@ -171,7 +171,7 @@ const HomePage = () => {
     try {
       let position = await getUserLocation();
       const response = await fetch(
-        `https://courtcaller.azurewebsites.net/api/Branches/sortBranchByDistance?Latitude=${position.coords.latitude}&Longitude=${position.coords.longitude}&pageNumber=1&pageSize=${itemsPerPage}`
+        `https://localhost:7104/api/Branches/sortBranchByDistance?Latitude=${position.coords.latitude}&Longitude=${position.coords.longitude}&pageNumber=1&pageSize=${itemsPerPage}`
       );
       const data = await response.json();
       setBranches(data.data.map(item => item.branch));

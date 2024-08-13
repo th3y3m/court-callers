@@ -1,8 +1,8 @@
 import api from "./api";
 
 
-const url = 'https://courtcaller.azurewebsites.net/api';
-export const fetchPrice = async (isVip,branchId) => {
+const url = 'https://localhost:7104/api';
+export const fetchPrice = async (isVip, branchId) => {
   try {
     const response = await api.post(`${url}/Prices/showprice`, null, {
       params: {

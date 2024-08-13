@@ -1,7 +1,7 @@
 // bookingApi.js
 import api from './api';
 
-const url = 'https://courtcaller.azurewebsites.net/api';
+const url = 'https://localhost:7104/api';
 
 
 export const checkBookingTypeFlex = async (userId, branchId) => {

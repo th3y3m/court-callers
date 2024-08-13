@@ -18,7 +18,7 @@ const NewsPage = () => {
       setError(null);
       try {
         const response = await fetch(
-          `https://courtcaller.azurewebsites.net/api/News/NewsPage?pageNumber=${currentPage}&pageSize=${itemsPerPage}&IsHomepageSlideshow=false&status=Active`
+          `https://localhost:7104/api/News/NewsPage?pageNumber=${currentPage}&pageSize=${itemsPerPage}&IsHomepageSlideshow=false&status=Active`
         );
         const data = await response.json();
         console.log("data", data);
@@ -42,7 +42,7 @@ const NewsPage = () => {
   };
 
   return (
-    <div style={{backgroundColor: "#EAECEE"}}>
+    <div style={{ backgroundColor: "#EAECEE" }}>
       <div className="container">
         <div className="hero_banner_container">
           <div className="hero_banner">

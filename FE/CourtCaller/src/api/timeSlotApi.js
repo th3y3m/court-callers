@@ -1,6 +1,6 @@
 import api from "./api";
 
-const url = 'https://courtcaller.azurewebsites.net/api';
+const url = 'https://localhost:7104/api';
 
 export const fetchTimeSlots = async () => {
   try {
@@ -50,7 +50,7 @@ export const addTimeSlotIfExistBooking = async (slotModel, bookingId) => {
   }
 };
 
-export  const fetchUnavailableSlots = async (date, branchId) => {
+export const fetchUnavailableSlots = async (date, branchId) => {
   try {
     const response = await api.get(`${url}/TimeSlots/unavailable_slot`, {
       params: {

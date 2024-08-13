@@ -68,30 +68,30 @@ namespace API
 
             builder.Services.AddScoped<ModelTrainingService>();
 
-            var redisConfigurationSection = builder.Configuration.GetSection("RedisConfiguration");
+            //var redisConfigurationSection = builder.Configuration.GetSection("RedisConfiguration");
 
-            var redisConfiguration = new ConfigurationOptions
-            {
-                EndPoints = { $"{redisConfigurationSection["Host"]}:{redisConfigurationSection["Port"]}" },
-                Password = redisConfigurationSection["Password"],
-                Ssl = bool.Parse(redisConfigurationSection["Ssl"]),
-                AbortOnConnectFail = bool.Parse(redisConfigurationSection["AbortOnConnectFail"]),
-                ConnectRetry = 5, // Tăng số lần thử lại kết nối
-                ConnectTimeout = 5000, // Tăng thời gian chờ kết nối
-                SyncTimeout = 5000, // Tăng thời gian chờ đồng bộ
-                KeepAlive = 180 // Tăng thời gian keep-alive
-            };
+            //var redisConfiguration = new ConfigurationOptions
+            //{
+            //    EndPoints = { $"{redisConfigurationSection["Host"]}:{redisConfigurationSection["Port"]}" },
+            //    Password = redisConfigurationSection["Password"],
+            //    Ssl = bool.Parse(redisConfigurationSection["Ssl"]),
+            //    AbortOnConnectFail = bool.Parse(redisConfigurationSection["AbortOnConnectFail"]),
+            //    ConnectRetry = 5, // Tăng số lần thử lại kết nối
+            //    ConnectTimeout = 5000, // Tăng thời gian chờ kết nối
+            //    SyncTimeout = 5000, // Tăng thời gian chờ đồng bộ
+            //    KeepAlive = 180 // Tăng thời gian keep-alive
+            //};
 
 
-            // Đăng ký ConfigurationOptions làm singleton
-            builder.Services.AddSingleton(redisConfiguration);
+            //// Đăng ký ConfigurationOptions làm singleton
+            //builder.Services.AddSingleton(redisConfiguration);
 
-            // Kết nối đến Redis bằng ConfigurationOptions
-            builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-            {
-                var configuration = sp.GetRequiredService<ConfigurationOptions>();
-                return ConnectionMultiplexer.Connect(configuration);
-            });
+            //// Kết nối đến Redis bằng ConfigurationOptions
+            //builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+            //{
+            //    var configuration = sp.GetRequiredService<ConfigurationOptions>();
+            //    return ConnectionMultiplexer.Connect(configuration);
+            //});
 
             //// Add services to the container
             //builder.Services.AddControllers().AddJsonOptions(options =>
@@ -154,8 +154,8 @@ namespace API
                     }
                 });
             });
-            builder.Services.AddSingleton<UserService>();
-            builder.Services.AddScoped<UserRepository>();
+            //builder.Services.AddSingleton<UserService>();
+            //builder.Services.AddScoped<UserRepository>();
             builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.AddScoped<PriceDAO>();
             builder.Services.AddScoped<PriceService>();

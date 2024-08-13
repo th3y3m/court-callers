@@ -94,12 +94,12 @@ const Login = () => {
           role: decode.role
         };
         login(userData); // Lưu thông tin người dùng vào context
-        navigate(ROUTERS.USER.HOME); 
+        navigate(ROUTERS.USER.HOME);
       } else if (res && res.status === 401) {
         //toast.error(res.error);
         setMessage("Login failed!");
         setMessageType("error");
-      } else if(res && res.data.status === "Error" && res.data.message == "User is banned!"){
+      } else if (res && res.data.status === "Error" && res.data.message == "User is banned!") {
         toast.error('This account is banned!', {
           position: "top-right",
           autoClose: 5000,
@@ -109,9 +109,9 @@ const Login = () => {
           draggable: true,
           progress: undefined,
           theme: "colored",
-          });
-          return;
-      } 
+        });
+        return;
+      }
     } catch (error) {
       //toast.error("Login failed!");
       setMessage("Login failed!");
@@ -152,7 +152,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "https://courtcaller.azurewebsites.net/api/authentication/register",
+        "https://localhost:7104/api/authentication/register",
         {
           fullName: fullName,
           email: email,
@@ -183,8 +183,8 @@ const Login = () => {
 
     try {
       const res = await fetch(
-        "https://courtcaller.azurewebsites.net/api/authentication/google-login?token=" +
-          token,
+        "https://localhost:7104/api/authentication/google-login?token=" +
+        token,
         {
           method: "POST",
           headers: {
@@ -230,8 +230,8 @@ const Login = () => {
       console.log("Access Token:", accessToken);
 
       const res = await fetch(
-        "https://courtcaller.azurewebsites.net/api/authentication/facebook-login?token=" +
-          accessToken,
+        "https://localhost:7104/api/authentication/facebook-login?token=" +
+        accessToken,
         {
           method: "POST",
           headers: {
@@ -315,7 +315,7 @@ const Login = () => {
                 {loading ? <ClipLoader size={15} color="#fff" /> : "Sign In"}
               </button>
               {message && (
-                <p style={{marginTop: 10, fontSize: "small"}} className={messageType === "error" ? "error-message" : ""}>
+                <p style={{ marginTop: 10, fontSize: "small" }} className={messageType === "error" ? "error-message" : ""}>
                   {message}
                 </p>
               )}
@@ -376,7 +376,7 @@ const Login = () => {
                 {loading ? <ClipLoader size={15} color="#fff" /> : "Sign Up"}
               </button>
               {message && (
-                <p style={{marginTop: 10}} className={messageType === "error" ? "error-message" : ""}>
+                <p style={{ marginTop: 10 }} className={messageType === "error" ? "error-message" : ""}>
                   {message}
                 </p>
               )}

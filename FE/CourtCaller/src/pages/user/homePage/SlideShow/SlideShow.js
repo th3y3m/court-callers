@@ -16,7 +16,7 @@ const SlideShowHomePage = () => {
             setError(null);
             try {
                 const response = await fetch(
-                    `https://courtcaller.azurewebsites.net/api/News/SlideShowImage`
+                    `https://localhost:7104/api/News/SlideShowImage`
                 );
                 const data = await response.json();
                 setNews(data ?? []);;

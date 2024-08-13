@@ -1,13 +1,13 @@
 import api from "./api";
 
-const url = 'https://courtcaller.azurewebsites.net/api';
+const url = 'https://localhost:7104/api';
 
 
 export const forgetPassword = async (email) => {
   try {
     const response = await api.post(`${url}/authentication/forget-password`, { email });
-    if( response.data) {
-      return { message: response.data.message , success : true };
+    if (response.data) {
+      return { message: response.data.message, success: true };
     } else {
       throw new Error('Invalid API response structure');
     }
@@ -20,8 +20,8 @@ export const forgetPassword = async (email) => {
 export const resetPassword = async (email, token, password, confirmPassword) => {
   try {
     const response = await api.post(`${url}/authentication/reset-password`, { email, token, password, confirmPassword });
-    if( response.data) {
-      return { message: response.data.message , success : true };
+    if (response.data) {
+      return { message: response.data.message, success: true };
     } else {
       throw new Error('Invalid API response structure');
     }
@@ -127,16 +127,17 @@ export const fetchUserById = async (userId) => {
 
 export const updateUserRole = async (userId, role) => {
   try {
-    console.log('Sending update request:', { userId, role }); 
-    const response = await api.put(`${url}/Roles/${userId}`,`"${role}"`,
+    console.log('Sending update request:', { userId, role });
+    const response = await api.put(`${url}/Roles/${userId}`, `"${role}"`,
       {
         headers: {
           'Content-Type': 'application/json'
         }
       }
-     );
+    );
     console.log('API response status:', response.status);
     console.log('API response data:', response.data);
   } catch (error) {
     throw new Error(`Failed to update user roles: ${error.message}`);
-  }};
+  }
+};

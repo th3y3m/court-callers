@@ -1,5 +1,5 @@
 const API_URL =
-  "https://courtcaller.azurewebsites.net/api/UserDetails/GetUserDetailByUserEmail/";
+  "https://localhost:7104/api/UserDetails/GetUserDetailByUserEmail/";
 
 export const validateFullName = (fullName) => {
   if (fullName.length >= 6) return { isValid: true, message: "" };
