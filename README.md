@@ -57,10 +57,8 @@ Court Callers is a web application designed to simplify the process of booking b
 - **Map Integration:** Leaflet
 
 ## 📸 Screenshots
-*Deploy link: [Court Caller](https://court-caller-deploy.vercel.app/)*
 ![HomePage](https://github.com/th3y3m/court-callers/blob/main/screenshots/Home.jpeg)
 
-*Swagger link: [Court Caller API Documentation](https://courtcaller.azurewebsites.net/swagger/index.html)*
 ![APIPage](https://github.com/th3y3m/court-callers/blob/main/screenshots/Swagger.jpeg)
 
 ![LoginPage](https://github.com/th3y3m/court-callers/blob/main/screenshots/Login.jpeg)
