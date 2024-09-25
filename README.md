@@ -1,6 +1,6 @@
 [![Court Callers Project (CI applied)](https://github.com/th3y3m/court-callers/actions/workflows/ci-script.yml/badge.svg)](https://github.com/th3y3m/court-callers/actions/workflows/ci-script.yml)
 ![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)
-
+[![CodeQL](https://github.com/th3y3m/court-callers/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/th3y3m/court-callers/actions/workflows/github-code-scanning/codeql)
 
 # Court Callers - Badminton Court Booking Management 🎾🏸
 Welcome to **Court Callers**! 🎉
